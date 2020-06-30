@@ -441,6 +441,12 @@ config USB_GADGET_XILINX
 	  dynamically linked module called "udc-xilinx" and force all
 	  gadget drivers to also be dynamically linked.
 
+config USB_GXP_UDC
+	bool "GXP UDC Driver"
+	depends on ARCH_HPE_GXP
+	help
+	  Say "y" to add support for GXP UDC driver
+
 source "drivers/usb/gadget/udc/aspeed-vhub/Kconfig"
 
 #

@@ -1,0 +1,755 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+/****************************************************************
+ **                                                             **
+ ** © Copyright 2019 Hewlett Packard Enterprise Development LP  **
+ **                                                             **
+ ****************************************************************/
+
+/dts-v1/;
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+	compatible = "hpe,gxp";
+	model = "GXP";
+
+	chosen {
+		bootargs = "earlyprintk console=ttyS0,115200 user_debug=31";
+	};
+
+	aliases {
+	};
+
+	memory {
+		device_type = "memory";
+		reg = <0x40000000 0x1f000000>;
+	};
+
+	ahb@80000000 {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		reg = <0x80000000 0x4f000000>;
+		ranges;
+
+		vic0: vic@ceff0000 {
+			compatible = "arm,pl192-vic";
+			interrupt-controller;
+			reg = <0xceff0000 0x1000>;
+			#interrupt-cells = <1>;
+		};
+
+
+		vic1: vic@80f00000 {
+			compatible = "arm,pl192-vic";
+			interrupt-controller;
+			reg = <0x80f00000 0x1000>;
+			#interrupt-cells = <1>;
+		};
+
+		timer0: timer@c0000080 {
+			compatible = "hpe,gxp-timer";
+			reg = <0xc0000080 0x1>, <0xc0000094 0x01>,
+			      <0xc0000088 0x08>;
+			interrupts = <0>;
+			interrupt-parent = <&vic0>;
+			clock-frequency = <400000000>;
+		};
+
+		watchdog: watchdog@c0000090 {
+			compatible = "hpe,gxp-wdt";
+			reg = <0xc0000090 0x02>, <0xc0000096 0x01>;
+		};
+
+		uartc: serial@c00000f0 {
+			compatible = "ns16550a";
+			reg = <0xc00000f0 0x8>;
+			interrupts = <19>;
+			interrupt-parent = <&vic0>;
+			clock-frequency = <1846153>;
+			reg-shift = <0>;
+		};
+
+		uarta: serial@c00000e0 {
+			compatible = "ns16550a";
+			reg = <0xc00000e0 0x8>;
+			interrupts = <17>;
+			interrupt-parent = <&vic0>;
+			clock-frequency = <1846153>;
+			reg-shift = <0>;
+		};
+
+		uartb: serial@c00000e8 {
+			compatible = "ns16550a";
+			reg = <0xc00000e8 0x8>;
+			interrupts = <18>;
+			interrupt-parent = <&vic0>;
+			clock-frequency = <1846153>;
+			reg-shift = <0>;
+		};
+
+		vuart_a_cfg: vuarta_cfg@80fc0230 {
+			compatible = "hpe,gxp-vuarta_cfg",
+				     "simple-mfd", "syscon";
+			reg = <0x80fc0230 0x100>;
+			reg-io-width = <1>;
+		};
+
+		vuart_a: vuart_a@80fd0200 {
+			compatible = "hpe,gxp-vuart";
+			reg = <0x80fd0200 0x100>;
+			interrupts = <2>;
+			interrupt-parent = <&vic1>;
+			clock-frequency = <1846153>;
+			reg-shift = <0>;
+			status = "okay";
+			serial-line = <3>;
+			vuart_cfg = <&vuart_a_cfg>;
+		};
+
+		usb0: ehci@cefe0000 {
+			compatible = "generic-ehci";
+			reg = <0xcefe0000 0x100>;
+			interrupts = <7>;
+			interrupt-parent = <&vic0>;
+		};
+
+		usb1: ohci@cefe0100 {
+			compatible = "generic-ohci";
+			reg = <0xcefe0100 0x110>;
+			interrupts = <6>;
+			interrupt-parent = <&vic0>;
+		};
+
+		spifi0: spifi@c0000200 {
+			compatible = "hpe,gxp-spifi";
+			reg = <0xc0000200 0x80>, <0xc000c000 0x100>;
+			interrupts = <20>;
+			interrupt-parent = <&vic0>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			flash@0 {
+				compatible = "jedec,spi-nor";
+				reg = <0>;
+				partitions {
+					compatible = "fixed-partitions";
+					#address-cells = <1>;
+					#size-cells = <1>;
+
+					partition@0 {
+						label = "kernel_and_rootfs";
+						reg = <0x00000000 0x01E00000>;
+					};
+					partition@1e00000 {
+						label = "device_tree";
+						reg = <0x01E00000 0x00100000>;
+					};
+					partition@1f00000 {
+						label = "bootloader";
+						reg = <0x01F00000 0x00100000>;
+					};
+				};
+			};
+
+			flash@1 {
+				compatible = "jedec,spi-nor";
+				reg = <1>;
+			};
+		};
+
+		spifi2:spifi@c0000300 {
+			compatible = "hpe,gxp-spifi-usx2065";
+			reg = <0xc0000300 0x80>, <0xc0008000 0x2000>;
+			reg-names = "reg", "dat";
+			interrupts = <22>, <26>;
+			interrupt-parent = <&vic0>;
+		};
+
+		i2cg: i2cg@c00000f8 {
+			compatible = "syscon";
+			reg = <0xc00000f8 0x08>;
+		};
+
+		i2c0: i2c@c0002000 {
+			compatible = "hpe,gxp-i2c";
+			reg = <0xc0002000 0x70>;
+			interrupts = <9>;
+			interrupt-parent = <&vic0>;
+			i2cg-handle = <&i2cg>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+		};
+
+		i2c1: i2c@c0002100 {
+			compatible = "hpe,gxp-i2c";
+			reg = <0xc0002100 0x70>;
+			interrupts = <9>;
+			interrupt-parent = <&vic0>;
+			i2cg-handle = <&i2cg>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+		};
+
+		i2c2: i2c@c0002200 {
+			compatible = "hpe,gxp-i2c";
+			reg = <0xc0002200 0x70>;
+			interrupts = <9>;
+			interrupt-parent = <&vic0>;
+			i2cg-handle = <&i2cg>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			/*
+			at24c02@50 {
+				compatible = "at24,24c02";
+				pagesize = <16>;
+				reg = <0x50>;
+			};
+			*/
+		};
+
+		i2c3: i2c@c0002300 {
+			compatible = "hpe,gxp-i2c";
+			reg = <0xc0002300 0x70>;
+			interrupts = <9>;
+			interrupt-parent = <&vic0>;
+			i2cg-handle = <&i2cg>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+		};
+
+		i2c4: i2c@c0002400 {
+			compatible = "hpe,gxp-i2c";
+			reg = <0xc0002400 0x70>;
+			interrupts = <9>;
+			interrupt-parent = <&vic0>;
+			i2cg-handle = <&i2cg>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+		};
+
+		i2c5: i2c@c0002500 {
+			compatible = "hpe,gxp-i2c";
+			reg = <0xc0002500 0x70>;
+			interrupts = <9>;
+			interrupt-parent = <&vic0>;
+			i2cg-handle = <&i2cg>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+		};
+
+		i2c6: i2c@c0002600 {
+			compatible = "hpe,gxp-i2c";
+			reg = <0xc0002600 0x70>;
+			interrupts = <9>;
+			interrupt-parent = <&vic0>;
+			i2cg-handle = <&i2cg>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+		};
+
+		i2c7: i2c@c0002700 {
+			compatible = "hpe,gxp-i2c";
+			reg = <0xc0002700 0x70>;
+			interrupts = <9>;
+			interrupt-parent = <&vic0>;
+			i2cg-handle = <&i2cg>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			/*
+			psu1: psu@58 {
+				compatible = "hpe,gxp-psu";
+				reg = <0x58>;
+			};
+
+			psu2: psu@59 {
+				compatible = "hpe,gxp-psu";
+				reg = <0x59>;
+			};
+			*/
+		};
+
+		i2c8: i2c@c0002800 {
+			compatible = "hpe,gxp-i2c";
+			reg = <0xc0002800 0x70>;
+			interrupts = <9>;
+			interrupt-parent = <&vic0>;
+			i2cg-handle = <&i2cg>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+		};
+
+		i2c9: i2c@c0002900 {
+			compatible = "hpe,gxp-i2c";
+			reg = <0xc0002900 0x70>;
+			interrupts = <9>;
+			interrupt-parent = <&vic0>;
+			i2cg-handle = <&i2cg>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+		};
+
+		i2cmux@4 {
+			compatible = "i2c-mux-reg";
+			i2c-parent = <&i2c4>;
+			reg = <0xd1000074 1>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			i2c4@1 {
+				reg = <1>;
+				#address-cells = <1>;
+				#size-cells = <0>;
+			};
+
+			i2c4@3 {
+				reg = <3>;
+				#address-cells = <1>;
+				#size-cells = <0>;
+			};
+
+			i2c4@4 {
+				reg = <4>;
+				#address-cells = <1>;
+				#size-cells = <0>;
+			};
+		};
+
+		i2cmux@6 {
+			compatible = "i2c-mux-reg";
+			i2c-parent = <&i2c6>;
+			reg = <0xd1000076 1>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			i2c6@1 {
+				reg = <1>;
+				#address-cells = <1>;
+				#size-cells = <0>;
+			};
+
+			i2c6@2 {
+				reg = <2>;
+				#address-cells = <1>;
+				#size-cells = <0>;
+			};
+
+			i2c6@3 {
+				reg = <3>;
+				#address-cells = <1>;
+				#size-cells = <0>;
+			};
+
+			i2c6@4 {
+				reg = <4>;
+				#address-cells = <1>;
+				#size-cells = <0>;
+			};
+
+			i2c6@5 {
+				reg = <5>;
+				#address-cells = <1>;
+				#size-cells = <0>;
+			};
+		};
+
+		mdio0: mdio@c0004080 {
+			compatible = "hpe,gxp-umac-mdio";
+			reg = <0xc0004080 0x10>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			ext_phy0: ethernt-phy@0 {
+				compatible = "marvell,88e1415",
+					     "ethernet-phy-ieee802.3-c22";
+				phy-mode = "sgmii";
+				reg = <0>;
+			};
+		};
+
+		mdio1: mdio@c0005080 {
+			compatible = "hpe,gxp-umac-mdio";
+			reg = <0xc0005080 0x10>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			int_phy0: ethernt-phy@0 {
+				compatible = "ethernet-phy-ieee802.3-c22";
+				phy-mode = "gmii";
+				reg = <0>;
+			};
+			int_phy1: ethernt-phy@1 {
+				compatible = "ethernet-phy-ieee802.3-c22";
+				phy-mode = "gmii";
+				reg = <1>;
+			};
+		};
+
+		umac0: umac@c0004000 {
+			compatible = "hpe,gxp-umac";
+			reg = <0xc0004000 0x80>;
+			interrupts = <10>;
+			interrupt-parent = <&vic0>;
+			mac-address = [94 18 82 16 04 d8];
+			phy-handle = <&ext_phy0>;
+			int-phy-handle = <&int_phy0>;
+		};
+
+		umac1: umac@c0005000 {
+			compatible = "hpe,gxp-umac";
+			use-ncsi;
+			reg = <0xc0005000 0x80>;
+			interrupts = <11>;
+			interrupt-parent = <&vic0>;
+			mac-address = [94 18 82 16 04 d9];
+			phy-handle = <&int_phy1>;
+		};
+
+		kcs_conf: kcs_conf@80fc0430 {
+			compatible = "hpe,gxp-kcs-bmc-cfg", "simple-mfd",
+				     "syscon";
+			reg = <0x80fc0430 0x100>;
+		};
+
+		kcs_reg: kcs_reg@080fd0400 {
+			compatible = "hpe,gxp-kcs-bmc";
+			reg = <0x80fd0400 0x8>;
+			interrupts = <6>;
+			interrupt-parent = <&vic1>;
+			kcs_chan = <1>;
+			status = "okay";
+			kcs-bmc-cfg = <&kcs_conf>;
+		};
+
+		thumbnail: thumbnail@c0000500 {
+			compatible = "hpe,gxp-thumbnail";
+			reg = <0xc0000500 0x20>;
+			bits-per-pixel = <32>;
+			width = <800>;
+			height = <600>;
+		};
+
+		xreg: xreg@d1000000 {
+			compatible = "hpe,gxp-xreg", "simple-mfd", "syscon";
+			reg = <0xd1000000 0xd0>;
+			attr {
+				compatible = "hpe,gxp-attr";
+			};
+		};
+
+		fanctrl: fanctrl@c1000c00 {
+			compatible = "hpe,gxp-fan-ctrl";
+			reg = <0xc1000c00 0x200>;
+			xreg_handle = <&xreg>;
+			fn2_handle = <&fn2>;
+		};
+
+		fn2: fn2@80200000 {
+			compatible = "hpe,gxp-fn2", "simple-mfd", "syscon";
+			reg = <0x80200000 0x100000>;
+			interrupts = <0>;
+			interrupt-parent = <&vic1>;
+		};
+
+		csm: csm@80000000 {
+			compatible = "hpe,gxp-csm", "simple-mfd", "syscon";
+			reg = <0x80000000 0x100000>;
+			memid {
+				compatible = "hpe,gxp-memid";
+			};
+		};
+
+		gpio: gpio {
+			compatible = "hpe,gxp-gpio";
+			#gpio-cells = <2>;
+			csm_handle = <&csm>;
+			fn2_handle = <&fn2>;
+			xreg_handle = <&xreg>;
+			vuhc0_handle = <&vuhc0>;
+			interrupts = <26>;
+			interrupt-parent = <&vic0>;
+		};
+
+		leds: leds {
+			compatible = "gpio-leds";
+
+			d0 {
+				gpios = <&gpio 300 0>;
+				default-state = "off";
+			};
+
+			d1 {
+				gpios = <&gpio 301 0>;
+				default-state = "off";
+			};
+
+			d2 {
+				gpios = <&gpio 302 0>;
+				default-state = "off";
+			};
+
+			d3 {
+				gpios = <&gpio 303 0>;
+				default-state = "off";
+			};
+
+			d4 {
+				gpios = <&gpio 304 0>;
+				default-state = "off";
+			};
+
+			d5 {
+				gpios = <&gpio 305 0>;
+				default-state = "off";
+			};
+
+			d6 {
+				gpios = <&gpio 306 0>;
+				default-state = "off";
+			};
+
+			d7 {
+				gpios = <&gpio 307 0>;
+				default-state = "off";
+			};
+		};
+
+		fan_presence: fan_presence {
+			compatible = "gpio-keys-polled";
+			poll-interval = <100>;
+			autorepeat;
+
+			fan1_pres {
+				label = "fan1 presence";
+				linux,code = <200>;
+				gpios = <&gpio 308 0>;
+			};
+
+			fan2_pres {
+				label = "fan2 presence";
+				linux,code = <201>;
+				gpios = <&gpio 309 0>;
+			};
+
+			fan3_pres {
+				label = "fan3 presence";
+				linux,code = <202>;
+				gpios = <&gpio 310 0>;
+			};
+
+			fan4_pres {
+				label = "fan4 presence";
+				linux,code = <203>;
+				gpios = <&gpio 311 0>;
+			};
+
+			fan5_pres {
+				label = "fan5 presence";
+				linux,code = <204>;
+				gpios = <&gpio 312 0>;
+			};
+
+			fan6_pres {
+				label = "fan6 presence";
+				linux,code = <205>;
+				gpios = <&gpio 313 0>;
+			};
+
+			fan7_pres {
+				label = "fan7 presence";
+				linux,code = <206>;
+				gpios = <&gpio 314 0>;
+			};
+
+			fan8_pres {
+				label = "fan8 presence";
+				linux,code = <207>;
+				gpios = <&gpio 315 0>;
+			};
+
+			fan9_pres {
+				label = "fan9 presence";
+				linux,code = <208>;
+				gpios = <&gpio 316 0>;
+			};
+
+			fan10_pres {
+				label = "fan10 presence";
+				linux,code = <209>;
+				gpios = <&gpio 317 0>;
+			};
+
+			fan11_pres {
+				label = "fan11 presence";
+				linux,code = <210>;
+				gpios = <&gpio 318 0>;
+			};
+
+			fan12_pres {
+				label = "fan12 presence";
+				linux,code = <211>;
+				gpios = <&gpio 319 0>;
+			};
+
+			fan13_pres {
+				label = "fan13 presence";
+				linux,code = <212>;
+				gpios = <&gpio 320 0>;
+			};
+
+			fan14_pres {
+				label = "fan14 presence";
+				linux,code = <213>;
+				gpios = <&gpio 321 0>;
+			};
+
+			fan15_pres {
+				label = "fan15 presence";
+				linux,code = <214>;
+				gpios = <&gpio 322 0>;
+			};
+
+			fan16_pres {
+				label = "fan16 presence";
+				linux,code = <215>;
+				gpios = <&gpio 323 0>;
+			};
+		};
+
+		vuhc0: vuhc@80400080 {
+			compatible = "syscon";
+			reg = <0x80400000 0x80>;
+		};
+
+		udcg: udcg@80400800 {
+			compatible = "hpe,gxp-udcg","syscon";
+			reg = <0x80400800 0x200>;
+		};
+
+		udc0: udc@80401000 {
+			compatible = "hpe,gxp-udc";
+			reg = <0x80401000 0x1000>;
+			interrupts = <13>;
+			interrupt-parent = <&vic1>;
+			vdevnum = <0>;
+			fepnum = <7>;
+			udcg-handle = <&udcg>;
+		};
+
+		udc1: udc@80402000 {
+			compatible = "hpe,gxp-udc";
+			reg = <0x80402000 0x1000>;
+			interrupts = <13>;
+			interrupt-parent = <&vic1>;
+			vdevnum = <1>;
+			fepnum = <7>;
+			udcg-handle = <&udcg>;
+		};
+
+		/*
+		udc2: udc@80403000 {
+			compatible = "hpe,gxp-udc";
+			reg = <0x80403000 0x1000>;
+			interrupts = <13>;
+			interrupt-parent = <&vic1>;
+			vdevnum = <2>;
+			fepnum = <1>;
+			udcg-handle = <&udcg>;
+		};
+
+		udc3: udc@80404000 {
+			compatible = "hpe,gxp-udc";
+			reg = <0x80404000 0x1000>;
+			interrupts = <13>;
+			interrupt-parent = <&vic1>;
+			vdevnum = <3>;
+			fepnum = <1>;
+			udcg-handle = <&udcg>;
+		};
+
+		udc4: udc@80405000 {
+			compatible = "hpe,gxp-udc";
+			reg = <0x80405000 0x1000>;
+			interrupts = <13>;
+			interrupt-parent = <&vic1>;
+			vdevnum = <4>;
+			fepnum = <1>;
+			udcg-handle = <&udcg>;
+		};
+
+		udc5: udc@80406000 {
+			compatible = "hpe,gxp-udc";
+			reg = <0x80406000 0x1000>;
+			interrupts = <13>;
+			interrupt-parent = <&vic1>;
+			vdevnum = <5>;
+			fepnum = <1>;
+			udcg-handle = <&udcg>;
+		};
+
+		udc6: udc@80407000 {
+			compatible = "hpe,gxp-udc";
+			reg = <0x80407000 0x1000>;
+			interrupts = <13>;
+			interrupt-parent = <&vic1>;
+			vdevnum = <6>;
+			fepnum = <1>;
+			udcg-handle = <&udcg>;
+		};
+
+		udc7: udc@80408000 {
+			compatible = "hpe,gxp-udc";
+			reg = <0x80408000 0x1000>;
+			interrupts = <13>;
+			interrupt-parent = <&vic1>;
+			vdevnum = <7>;
+			fepnum = <1>;
+			udcg-handle = <&udcg>;
+		};
+		*/
+
+		//sram is mapped to 0xd0000000
+		//but top 64K sram is reserved to host
+		//so sram for gxp itself is from 0xd0010000
+		sram: sram@d0010000 {
+			compatible = "mtd-ram";
+			reg = <0xd0010000 0x70000>;
+			bank-width = <1>;
+		};
+
+		coretemp: coretemp@c0000130 {
+			compatible = "hpe,gxp-coretemp";
+			reg = <0xc0000130 0x8>;
+		};
+
+		/*
+		syspower: syspower {
+			compatible = "hpe,gxp-power";
+			psu_phandle = <&psu1>, <&psu2>;
+		};
+		*/
+	};
+
+	clocks {
+		osc: osc {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-output-names = "osc";
+			clock-frequency = <33333333>;
+		};
+
+		iopclk: iopclk {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clocks = <&osc>;
+			clock-out-put-names = "iopclk";
+			clock-frequency = <400000000>;
+		};
+
+		memclk: memclk {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clocks = <&osc>;
+			clock-out-put-names = "memclk";
+			clock-frequency = <800000000>;
+		};
+	};
+};

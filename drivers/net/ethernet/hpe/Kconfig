@@ -1,0 +1,26 @@
+config NET_VENDOR_HPE
+	bool "HPE device"
+	default y
+	depends on ARCH_HPE
+	help
+	  HPE ethernet devices
+
+if NET_VENDOR_HPE
+
+config UMAC
+	tristate "UMAC support"
+	depends on ARCH_HPE
+	select CRC32
+	select MII
+	select PHYLIB
+	select UMAC_MDIO
+	help
+	  Support UMAC
+
+config UMAC_MDIO
+	tristate "UMAC mdio support"
+	depends on ARCH_HPE
+	help
+	  Support UMAC mdio bus
+
+endif
