@@ -48,11 +48,14 @@ static ssize_t show_fault(struct device *dev, struct device_attribute *attr,
 	struct gxp_fan_ctrl_drvdata *drvdata = dev_get_drvdata(dev);
 	unsigned char val;
 	unsigned int reg;
+	unsigned int mask = 0x1;
 
 	// Check Fan present.
 	regmap_read(drvdata->xreg_map, 0x28, &reg);
 	reg = reg >> 8;
-	val = (reg & BIT(nr))?1:0;
+	mask = mask << (nr * 2); // Shift 2 bits per Fan
+
+	val = (reg & mask) ? 1 : 0;
 
 	return sprintf(buf, "%d\n", val);
 }
