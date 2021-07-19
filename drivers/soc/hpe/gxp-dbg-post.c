@@ -87,7 +87,7 @@ static int gxp_dbg_post_probe(struct platform_device *pdev)
 {
 	struct gxp_dbg_post_drvdata *drvdata;
 	struct resource *res;
-	int req;
+	int ret;
 
 	printk(KERN_INFO "Initializing dbg_post driver\n");
 	drvdata = devm_kzalloc(&pdev->dev, sizeof(struct gxp_dbg_post_drvdata),
