@@ -172,10 +172,16 @@ static int gxp_csm_probe(struct platform_device *pdev)
 	if (!drvdata)
 		return -ENOMEM;
 	platform_set_drvdata(pdev, drvdata);
-	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-	drvdata->base = devm_ioremap_resource(&pdev->dev, res);
-	if (IS_ERR(drvdata->base))
-		return PTR_ERR(drvdata->base);
+	for ( int i = 0 ; i < pdev->num_resources ; i++ ) {
+		res = platform_get_resource(pdev, IORESOURCE_MEM, i);
+		if ( i == 0 ) {
+			drvdata->base = devm_ioremap_resource(&pdev->dev, res);
+			if (IS_ERR(drvdata->base))
+				return PTR_ERR(drvdata->base);
+		} else {
+			devm_ioremap_resource(&pdev->dev, res);
+		}
+	}
 
 	mutex_init(&drvdata->mutex);
 	sysfs_register(&pdev->dev, drvdata);
