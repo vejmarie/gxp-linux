@@ -29,6 +29,7 @@ struct gxp_dbg_post_drvdata {
 	struct device *dev;
 	void __iomem *base;
 	struct mutex mutex;
+        int irq;
 };
 
 static ssize_t dbg_post_show(struct device *dev,
