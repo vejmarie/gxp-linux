@@ -68,6 +68,18 @@ static int sysfs_register(struct device *parent,
 	return 0;
 }
 
+static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
+{
+	// For the moment let's printk a message
+	printk(KERN_INFO "DBG_POST: Update ");
+	mutex_lock(&_drvdata->mutex);
+
+        value = readl(_drvdata->base + DBG_POST_PORTDATA);
+        printk(KERN_INFO "0x%02x \n", value);
+
+        mutex_unlock(&_drvdata->mutex);
+}
+
 static int gxp_dbg_post_probe(struct platform_device *pdev)
 {
 	struct gxp_dbg_post_drvdata *drvdata;
@@ -86,6 +98,20 @@ static int gxp_dbg_post_probe(struct platform_device *pdev)
 	drvdata->base = devm_ioremap_resource(&pdev->dev, res);
 	if (IS_ERR(drvdata->base))
 		return PTR_ERR(drvdata->base);
+	// let's retrieve the driver irq
+        ret = platform_get_irq(pdev, 0);
+        if (ret < 0) {
+                dev_err(&pdev->dev, "unable to obtain IRQ number\n");
+                return ret;
+        }
+        drvdata->irq = ret;
+	// Let's attach to the irq
+        ret = devm_request_irq(&pdev->dev,
+				drvdata->irq,
+				gxp_dbg_post_irq,
+				IRQF_SHARED,
+				"gxp-dbg-post",
+				drvdata);
 
 	mutex_init(&drvdata->mutex);
 
