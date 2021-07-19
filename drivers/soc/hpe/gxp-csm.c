@@ -166,13 +166,14 @@ static int gxp_csm_probe(struct platform_device *pdev)
 {
 	struct gxp_csm_drvdata *drvdata;
 	struct resource *res;
+	int i;
 
 	drvdata = devm_kzalloc(&pdev->dev,
 				sizeof(struct gxp_csm_drvdata), GFP_KERNEL);
 	if (!drvdata)
 		return -ENOMEM;
 	platform_set_drvdata(pdev, drvdata);
-	for ( int i = 0 ; i < pdev->num_resources ; i++ ) {
+	for ( i = 0 ; i < pdev->num_resources ; i++ ) {
 		res = platform_get_resource(pdev, IORESOURCE_MEM, i);
 		if ( i == 0 ) {
 			drvdata->base = devm_ioremap_resource(&pdev->dev, res);
