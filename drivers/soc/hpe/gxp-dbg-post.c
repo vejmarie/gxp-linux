@@ -59,7 +59,7 @@ static int sysfs_register(struct device *parent,
 			struct gxp_dbg_post_drvdata *drvdata)
 {
 	struct device *dev;
-
+	printk(KERN_INFO "registering dbg_post into sysfs\n");
 	dev = device_create_with_groups(soc_class, parent, 0,
 					drvdata, dbg_post_groups, "dbg_post");
 	if (IS_ERR(dev))
@@ -73,6 +73,7 @@ static int gxp_dbg_post_probe(struct platform_device *pdev)
 	struct gxp_dbg_post_drvdata *drvdata;
 	struct resource *res;
 
+	printk(KERN_INFO "Initializing dbg_post driver\n");
 	drvdata = devm_kzalloc(&pdev->dev, sizeof(struct gxp_dbg_post_drvdata),
 				GFP_KERNEL);
 	if (!drvdata)
