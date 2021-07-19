@@ -47,7 +47,7 @@ static ssize_t dbg_post_show(struct device *dev,
 	return ret;
 }
 
-static DEVICE_ATTR_RW(dbg_post);
+static DEVICE_ATTR_RO(dbg_post);
 
 static struct attribute *dbg_post_attrs[] = {
 	&dev_attr_dbg_post.attr,
