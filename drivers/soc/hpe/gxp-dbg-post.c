@@ -71,20 +71,23 @@ static int sysfs_register(struct device *parent,
 
 static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
 {
+	unsigned short int value;
+	struct gxp_dbg_post_drvdata *drvdata = (struct gxp_dbg_post_drvdata *)_drvdata;
 	// For the moment let's printk a message
 	printk(KERN_INFO "DBG_POST: Update ");
-	mutex_lock(&_drvdata->mutex);
+	mutex_lock(&drvdata->mutex);
 
-        value = readl(_drvdata->base + DBG_POST_PORTDATA);
+        value = readl(drvdata->base + DBG_POST_PORTDATA);
         printk(KERN_INFO "0x%02x \n", value);
 
-        mutex_unlock(&_drvdata->mutex);
+        mutex_unlock(&drvdata->mutex);
 }
 
 static int gxp_dbg_post_probe(struct platform_device *pdev)
 {
 	struct gxp_dbg_post_drvdata *drvdata;
 	struct resource *res;
+	int req;
 
 	printk(KERN_INFO "Initializing dbg_post driver\n");
 	drvdata = devm_kzalloc(&pdev->dev, sizeof(struct gxp_dbg_post_drvdata),
