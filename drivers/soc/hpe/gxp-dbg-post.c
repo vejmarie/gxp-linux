@@ -92,7 +92,8 @@ static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
 	}
 	*/
 	// update CSR
-	writew( 0xF, drvdata->base + DBG_POST_CSR);
+	value = readw(drvdata->base + DBG_POST_CSR);
+	writew( value | 0xc, drvdata->base + DBG_POST_CSR);
         mutex_unlock(&drvdata->mutex);
 	return IRQ_HANDLED;
 }
