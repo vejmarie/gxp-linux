@@ -70,18 +70,25 @@ static int sysfs_register(struct device *parent,
 	return 0;
 }
 
-
+unsigned short int postvalue=0;
+unsigned long  interruptnb=0;
 
 static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
 {
 	unsigned short int value;
 	struct gxp_dbg_post_drvdata *drvdata = (struct gxp_dbg_post_drvdata *)_drvdata;
+	interruptnb++;
 	// For the moment let's printk a message
-	printk(KERN_INFO "DBG_INFO: Int\n");
 	mutex_lock(&drvdata->mutex);
 
         value = readl(drvdata->base + DBG_POST_PORTDATA);
-        printk(KERN_INFO "DBG_POST: Interrupt update 0x%02x \n", value);
+	if (postvalue != value ) {
+        	printk(KERN_INFO "DBG_POST: Interrupt update 0x%02x \n", value);
+		postvalue = value;
+	}
+	if (interruptnb % 10000 == 0) {
+		printk(KERN_INFO "DBG_POST: Inerrupt number %ld\n", interruptnb);
+	}
 	// update CSR
 	writew( 0xF, drvdata->base + DBG_POST_CSR);
         mutex_unlock(&drvdata->mutex);
