@@ -70,6 +70,8 @@ static int sysfs_register(struct device *parent,
 	return 0;
 }
 
+
+
 static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
 {
 	unsigned short int value;
@@ -80,7 +82,8 @@ static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
 
         value = readl(drvdata->base + DBG_POST_PORTDATA);
         printk(KERN_INFO "0x%02x \n", value);
-
+	// update CSR
+	writel( 0xF, drvdata->base + DBG_POST_CSR);
         mutex_unlock(&drvdata->mutex);
 }
 
