@@ -23,6 +23,7 @@
 #include "gxp-soclib.h"
 
 #define DBG_POST_PORTDATA		0x4
+#define DBG_POST_CSR			0x1E
 
 struct gxp_dbg_post_drvdata {
 	struct platform_device *pdev;
@@ -74,7 +75,7 @@ static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
 	unsigned short int value;
 	struct gxp_dbg_post_drvdata *drvdata = (struct gxp_dbg_post_drvdata *)_drvdata;
 	// For the moment let's printk a message
-	printk(KERN_INFO "DBG_POST: Update ");
+	printk(KERN_INFO "DBG_POST: Interrupt update ");
 	mutex_lock(&drvdata->mutex);
 
         value = readl(drvdata->base + DBG_POST_PORTDATA);
@@ -88,6 +89,7 @@ static int gxp_dbg_post_probe(struct platform_device *pdev)
 	struct gxp_dbg_post_drvdata *drvdata;
 	struct resource *res;
 	int ret;
+	unsigned short int value;
 
 	printk(KERN_INFO "Initializing dbg_post driver\n");
 	drvdata = devm_kzalloc(&pdev->dev, sizeof(struct gxp_dbg_post_drvdata),
@@ -116,6 +118,11 @@ static int gxp_dbg_post_probe(struct platform_device *pdev)
 				IRQF_SHARED,
 				"gxp-dbg-post",
 				drvdata);
+
+	// Let's start the irq
+	value = readl(drvdata->base + DBG_POST_CSR);
+	value = value | 0x3;
+	writel( value, drvdata->base + DBG_POST_CSR);
 
 	mutex_init(&drvdata->mutex);
 
