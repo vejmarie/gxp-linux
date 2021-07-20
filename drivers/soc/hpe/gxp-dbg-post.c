@@ -86,9 +86,11 @@ static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
         	printk(KERN_INFO "DBG_POST: Interrupt update 0x%02x \n", value);
 		postvalue = value;
 	}
+	/*
 	if (interruptnb % 10000 == 0) {
 		printk(KERN_INFO "DBG_POST: Inerrupt number %ld\n", interruptnb);
 	}
+	*/
 	// update CSR
 	writew( 0xF, drvdata->base + DBG_POST_CSR);
         mutex_unlock(&drvdata->mutex);
