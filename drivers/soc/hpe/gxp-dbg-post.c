@@ -83,7 +83,7 @@ static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
         value = readl(drvdata->base + DBG_POST_PORTDATA);
         printk(KERN_INFO "DBG_POST: Interrupt update 0x%02x \n", value);
 	// update CSR
-	writel( 0xF, drvdata->base + DBG_POST_CSR);
+	writew( 0xF, drvdata->base + DBG_POST_CSR);
         mutex_unlock(&drvdata->mutex);
 	return IRQ_HANDLED;
 }
@@ -125,10 +125,10 @@ static int gxp_dbg_post_probe(struct platform_device *pdev)
 
 	// Let's start the irq
 	printk(KERN_INFO "DBG: base csr address %04x\n", drvdata->base + DBG_POST_CSR);
-	value = readl(drvdata->base + DBG_POST_CSR);
+	value = readw(drvdata->base + DBG_POST_CSR);
 	printk(KERN_INFO "DBG: base csr value %02x\n", value);
 	value = value | 0xf;
-	writel( value, drvdata->base + DBG_POST_CSR);
+	writew( value, drvdata->base + DBG_POST_CSR);
 
 	mutex_init(&drvdata->mutex);
 
