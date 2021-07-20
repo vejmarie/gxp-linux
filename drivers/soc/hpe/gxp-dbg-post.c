@@ -123,7 +123,7 @@ static int gxp_dbg_post_probe(struct platform_device *pdev)
 	printk(KERN_INFO "DBG: base csr address %04x\n", drvdata->base + DBG_POST_CSR);
 	value = readl(drvdata->base + DBG_POST_CSR);
 	printk(KERN_INFO "DBG: base csr value %02x\n", value);
-	value = value | 0x3;
+	value = value | 0xf;
 	writel( value, drvdata->base + DBG_POST_CSR);
 
 	mutex_init(&drvdata->mutex);
