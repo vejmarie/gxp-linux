@@ -77,6 +77,7 @@ static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
 	unsigned short int value;
 	struct gxp_dbg_post_drvdata *drvdata = (struct gxp_dbg_post_drvdata *)_drvdata;
 	// For the moment let's printk a message
+	printk(KERN_INFO "DBG_INFO: Int\n");
 	mutex_lock(&drvdata->mutex);
 
         value = readl(drvdata->base + DBG_POST_PORTDATA);
