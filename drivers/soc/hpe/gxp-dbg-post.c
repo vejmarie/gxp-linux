@@ -53,6 +53,7 @@ unsigned int state=0;
 
 static int post_open(struct inode *inode, struct file *file)
 {
+	printk("Device open\n");
 	return 0;
 }
 
@@ -160,7 +161,7 @@ static int gxp_dbg_post_probe(struct platform_device *pdev)
 	struct resource *res;
 	int ret;
 	unsigned short int value;
-	int err = -ENODEV;
+	struct device *dev_ret;
 
 	printk(KERN_INFO "Initializing dbg_post driver\n");
 	drvdata = devm_kzalloc(&pdev->dev, sizeof(struct gxp_dbg_post_drvdata),
