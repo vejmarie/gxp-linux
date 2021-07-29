@@ -42,46 +42,11 @@ struct gxp_dbg_post_drvdata {
         int irq;
 };
 
-struct postdevice  {
-        int minor;
-        const char *name;
-        const struct file_operations *fops;
-        struct list_head list;
-        struct device *parent;
-        struct device *this_device;
-        const struct attribute_group **groups;
-        const char *nodename;
-        umode_t mode;
-};
-
 static struct class *post_class;
 
-static void *post_seq_start(struct seq_file *seq, loff_t *pos)
-{
-        return NULL;
-}
-
-static void *post_seq_next(struct seq_file *seq, void *v, loff_t *pos)
-{
-        return NULL;
-}
-
-static void post_seq_stop(struct seq_file *seq, void *v)
-{
-}
-
-static int post_seq_show(struct seq_file *seq, void *v)
-{
-        return 0;
-}
-
-
-static const struct seq_operations post_seq_ops = {
-        .start = post_seq_start,
-        .next  = post_seq_next,
-        .stop  = post_seq_stop,
-        .show  = post_seq_show,
-};
+static dev_t first;
+static struct cdev c_dev; 
+static struct class *cl; 
 
 unsigned int state=0;
 
@@ -188,17 +153,6 @@ static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
 	return IRQ_HANDLED;
 }
 
-static char *post_devnode(struct device *dev, umode_t *mode)
-{
-        struct postdevice *c = dev_get_drvdata(dev);
-
-        if (mode && c->mode)
-                *mode = c->mode;
-        if (c->nodename)
-                return kstrdup(c->nodename, GFP_KERNEL);
-        return NULL;
-}
-
 static int gxp_dbg_post_probe(struct platform_device *pdev)
 {
 	struct gxp_dbg_post_drvdata *drvdata;
@@ -246,25 +200,33 @@ static int gxp_dbg_post_probe(struct platform_device *pdev)
 
 
 	// Let's create the character device for the output
-        struct proc_dir_entry *return_entry;
+	//
 
-        return_entry = proc_create_seq("post", 0, NULL, &post_seq_ops);
-        post_class = class_create(THIS_MODULE, "post");
-        err = PTR_ERR(post_class);
-        if (IS_ERR(post_class))
+	if ((ret = alloc_chrdev_region(&first, 0, 1, "gxp-dbg-post")) < 0)
 	{
-		if (return_entry)
-	                remove_proc_entry("post", NULL);
-	        return err;
+	        return ret;
+	}
+	if (IS_ERR(cl = class_create(THIS_MODULE, "chardrv")))
+	{
+		unregister_chrdev_region(first, 1);
+		return PTR_ERR(cl);
+	}
+	if (IS_ERR(dev_ret = device_create(cl, NULL, first, NULL, "postcode")))
+	{
+		class_destroy(cl);
+		unregister_chrdev_region(first, 1);
+		return PTR_ERR(dev_ret);
 	}
 
-        err = -EIO;
-        if (register_chrdev(MISC_MAJOR, "post", &post_fops))
+	cdev_init(&c_dev, &post_fops);
+	if ((ret = cdev_add(&c_dev, first, 1)) < 0)
 	{
-		pr_err("unable to get major %d for post device\n", MISC_MAJOR);
-	        class_destroy(post_class);
+		device_destroy(cl, first);
+		class_destroy(cl);
+		unregister_chrdev_region(first, 1);
+		return ret;
 	}
-        post_class->devnode = post_devnode;
+
 	return sysfs_register(&pdev->dev, drvdata);
 }
 
