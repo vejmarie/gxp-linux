@@ -20,6 +20,14 @@
 #include <linux/regmap.h>
 #include <linux/reset.h>
 
+#include <linux/fs.h>
+#include <linux/errno.h>
+#include <linux/kernel.h>
+#include <linux/major.h>
+#include <linux/seq_file.h>
+#include <linux/stat.h>
+#include <linux/init.h>
+
 #include "gxp-soclib.h"
 
 #define DBG_POST_PORTDATA		0x4
@@ -33,6 +41,49 @@ struct gxp_dbg_post_drvdata {
         int irq;
 };
 
+static struct class *post_class;
+
+static const struct file_operations post_fops = {
+        .owner          = THIS_MODULE,
+        .open           = post_open,
+};
+
+
+static void *post_seq_start(struct seq_file *seq, loff_t *pos)
+{
+        return NULL;
+}
+
+static void *post_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+{
+        return NULL;
+}
+
+static void post_seq_stop(struct seq_file *seq, void *v)
+{
+}
+
+static int post_seq_show(struct seq_file *seq, void *v)
+{
+        return 0;
+}
+
+
+static const struct seq_operations post_seq_ops = {
+        .start = post_seq_start,
+        .next  = post_seq_next,
+        .stop  = post_seq_stop,
+        .show  = post_seq_show,
+};
+
+unsigned int state=0;
+
+static int post_open(struct inode *inode, struct file *file)
+{
+	return 0;
+}
+
+
 static ssize_t dbg_post_show(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
@@ -42,14 +93,42 @@ static ssize_t dbg_post_show(struct device *dev,
 
 	mutex_lock(&drvdata->mutex);
 
-	value = readl(drvdata->base + DBG_POST_PORTDATA);
-	ret = sprintf(buf, "0x%02x", value);
+	ret = sprintf(buf, "%d", state);
 
 	mutex_unlock(&drvdata->mutex);
 	return ret;
 }
 
-static DEVICE_ATTR_RO(dbg_post);
+static ssize_t dbg_post_store(struct device *dev, struct device_attribute *attr,
+                        const char *buf, size_t count)
+{
+        struct gxp_dbg_post_drvdata *drvdata = dev_get_drvdata(dev);
+        unsigned int input;
+        unsigned short int value;
+        int rc;
+
+        rc = kstrtouint(buf, 0, &input);
+        if (rc < 0)
+                return -EINVAL;
+	if (input != 0 && input != 1)
+		return -EINVAL;
+
+        mutex_lock(&drvdata->mutex);
+
+	state = input;
+	if (state == 1)
+	{
+		value = readw(drvdata->base + DBG_POST_CSR);
+	        printk(KERN_INFO "DBG: base csr value %02x\n", value);
+	        value = value | 0xf;
+	        writew( value, drvdata->base + DBG_POST_CSR);
+	}
+
+        mutex_unlock(&drvdata->mutex);
+        return count;
+}
+
+static DEVICE_ATTR_RW(dbg_post);
 
 static struct attribute *dbg_post_attrs[] = {
 	&dev_attr_dbg_post.attr,
@@ -142,6 +221,27 @@ static int gxp_dbg_post_probe(struct platform_device *pdev)
 
 	mutex_init(&drvdata->mutex);
 
+
+	// Let's create the character device for the output
+        struct proc_dir_entry *return_entry;
+
+        return_entry = proc_create_seq("post", 0, NULL, &post_seq_ops);
+        post_class = class_create(THIS_MODULE, "post");
+        err = PTR_ERR(post_class);
+        if (IS_ERR(post_class))
+	{
+		if (return_entry)
+	                remove_proc_entry("post", NULL);
+	        return err;
+	}
+
+        err = -EIO;
+        if (register_chrdev(MISC_MAJOR, "post", &post_fops))
+	{
+		pr_err("unable to get major %d for post device\n", MISC_MAJOR);
+	        class_destroy(post_class);
+	}
+        post_class->devnode = post_devnode;
 	return sysfs_register(&pdev->dev, drvdata);
 }
 
