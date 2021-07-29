@@ -28,6 +28,9 @@
 #include <linux/proc_fs.h>
 #include <linux/stat.h>
 #include <linux/init.h>
+#include <linux/kdev_t.h>
+#include <linux/device.h>
+#include <linux/cdev.h>
 
 #include "gxp-soclib.h"
 
@@ -41,8 +44,6 @@ struct gxp_dbg_post_drvdata {
 	struct mutex mutex;
         int irq;
 };
-
-static struct class *post_class;
 
 static dev_t first;
 static struct cdev c_dev; 
