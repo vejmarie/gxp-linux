@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Copyright (C) 2019 Hewlett-Packard Development Company, L.P.
+/* Copyright (C) 2021 Hewlett-Packard Development Company, L.P.
  *
  *
  * This program is free software; you can redistribute it and/or modify
@@ -31,6 +31,7 @@
 #include <linux/kdev_t.h>
 #include <linux/device.h>
 #include <linux/cdev.h>
+#include <linux/wait.h>
 
 #include "gxp-soclib.h"
 
@@ -50,6 +51,10 @@ static struct cdev c_dev;
 static struct class *cl; 
 
 unsigned int state=0;
+unsigned short int postcode =  0x00;
+unsigned short int previouspostcode = 0x00;
+
+static DECLARE_WAIT_QUEUE_HEAD(wq);
 
 static int post_open(struct inode *inode, struct file *file)
 {
@@ -57,9 +62,21 @@ static int post_open(struct inode *inode, struct file *file)
 	return 0;
 }
 
+static int post_read(struct file *f, char __user *buf, size_t len, loff_t *off)
+{
+        printk("Device open\n");
+	wait_event_interruptible(wq, postcode == previouspostcode);
+	previouspostcode = postcode;
+	if (copy_to_user(buf, &postcode, 1)) {
+        	return -EFAULT;
+    	}
+        return 0;
+}
+
 static const struct file_operations post_fops = {
         .owner          = THIS_MODULE,
         .open           = post_open,
+	.read		= post_read,
 };
 
 
@@ -127,7 +144,6 @@ static int sysfs_register(struct device *parent,
 	return 0;
 }
 
-unsigned short int postvalue=0;
 unsigned long  interruptnb=0;
 
 static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
@@ -139,9 +155,9 @@ static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
 	mutex_lock(&drvdata->mutex);
 
         value = readl(drvdata->base + DBG_POST_PORTDATA);
-	if (postvalue != value ) {
+	if (postcode != value ) {
         	printk(KERN_INFO "DBG_POST: Interrupt update 0x%02x \n", value);
-		postvalue = value;
+		postcode = value;
 	}
 	/*
 	if (interruptnb % 10000 == 0) {
@@ -152,6 +168,7 @@ static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
 	value = readw(drvdata->base + DBG_POST_CSR);
 	writew( value | 0xc, drvdata->base + DBG_POST_CSR);
         mutex_unlock(&drvdata->mutex);
+	wake_up_interruptible(&wq);
 	return IRQ_HANDLED;
 }
 
