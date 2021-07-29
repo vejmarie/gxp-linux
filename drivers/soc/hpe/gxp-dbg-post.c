@@ -42,13 +42,19 @@ struct gxp_dbg_post_drvdata {
         int irq;
 };
 
-static struct class *post_class;
-
-static const struct file_operations post_fops = {
-        .owner          = THIS_MODULE,
-        .open           = post_open,
+struct postdevice  {
+        int minor;
+        const char *name;
+        const struct file_operations *fops;
+        struct list_head list;
+        struct device *parent;
+        struct device *this_device;
+        const struct attribute_group **groups;
+        const char *nodename;
+        umode_t mode;
 };
 
+static struct class *post_class;
 
 static void *post_seq_start(struct seq_file *seq, loff_t *pos)
 {
@@ -84,12 +90,16 @@ static int post_open(struct inode *inode, struct file *file)
 	return 0;
 }
 
+static const struct file_operations post_fops = {
+        .owner          = THIS_MODULE,
+        .open           = post_open,
+};
+
 
 static ssize_t dbg_post_show(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
 	struct gxp_dbg_post_drvdata *drvdata = dev_get_drvdata(dev);
-	unsigned short int value;
 	ssize_t ret;
 
 	mutex_lock(&drvdata->mutex);
@@ -176,6 +186,17 @@ static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
 	writew( value | 0xc, drvdata->base + DBG_POST_CSR);
         mutex_unlock(&drvdata->mutex);
 	return IRQ_HANDLED;
+}
+
+static char *post_devnode(struct device *dev, umode_t *mode)
+{
+        struct postdevice *c = dev_get_drvdata(dev);
+
+        if (mode && c->mode)
+                *mode = c->mode;
+        if (c->nodename)
+                return kstrdup(c->nodename, GFP_KERNEL);
+        return NULL;
 }
 
 static int gxp_dbg_post_probe(struct platform_device *pdev)
