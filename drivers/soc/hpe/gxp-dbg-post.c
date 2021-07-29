@@ -25,6 +25,7 @@
 #include <linux/kernel.h>
 #include <linux/major.h>
 #include <linux/seq_file.h>
+#include <linux/proc_fs.h>
 #include <linux/stat.h>
 #include <linux/init.h>
 
