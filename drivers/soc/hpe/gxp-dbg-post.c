@@ -49,6 +49,7 @@ struct gxp_dbg_post_drvdata {
 static dev_t first;
 static struct cdev c_dev; 
 static struct class *cl; 
+struct gxp_dbg_post_drvdata *drvdata=NULL;
 
 unsigned int state=0;
 unsigned short int postcode =  0x00;
@@ -59,6 +60,19 @@ static DECLARE_WAIT_QUEUE_HEAD(wq);
 static int post_open(struct inode *inode, struct file *file)
 {
 	printk("Device open\n");
+	// We need to wait for the interrupt to be launched if state
+	// is null. or let it go if postcode value is not null after reading it
+	if (postcode == 0)
+	{
+	        unsigned short int value;
+       		mutex_lock(&drvdata->mutex);
+       		value = readl(drvdata->base + DBG_POST_PORTDATA);
+
+	        if (postcode != value ) {
+	                printk(KERN_INFO "DBG_POST: Postcode update 0x%02x \n", value);
+	                postcode = value;
+       		 }
+	}
 	return 0;
 }
 
@@ -83,7 +97,6 @@ static const struct file_operations post_fops = {
 static ssize_t dbg_post_show(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
-	struct gxp_dbg_post_drvdata *drvdata = dev_get_drvdata(dev);
 	ssize_t ret;
 
 	mutex_lock(&drvdata->mutex);
@@ -97,7 +110,6 @@ static ssize_t dbg_post_show(struct device *dev,
 static ssize_t dbg_post_store(struct device *dev, struct device_attribute *attr,
                         const char *buf, size_t count)
 {
-        struct gxp_dbg_post_drvdata *drvdata = dev_get_drvdata(dev);
         unsigned int input;
         unsigned short int value;
         int rc;
@@ -131,8 +143,7 @@ static struct attribute *dbg_post_attrs[] = {
 };
 ATTRIBUTE_GROUPS(dbg_post);
 
-static int sysfs_register(struct device *parent,
-			struct gxp_dbg_post_drvdata *drvdata)
+static int sysfs_register(struct device *parent)
 {
 	struct device *dev;
 	printk(KERN_INFO "registering dbg_post into sysfs\n");
@@ -149,7 +160,7 @@ unsigned long  interruptnb=0;
 static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
 {
 	unsigned short int value;
-	struct gxp_dbg_post_drvdata *drvdata = (struct gxp_dbg_post_drvdata *)_drvdata;
+	// struct gxp_dbg_post_drvdata *drvdata = (struct gxp_dbg_post_drvdata *)_drvdata;
 	interruptnb++;
 	// For the moment let's printk a message
 	mutex_lock(&drvdata->mutex);
@@ -174,7 +185,6 @@ static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
 
 static int gxp_dbg_post_probe(struct platform_device *pdev)
 {
-	struct gxp_dbg_post_drvdata *drvdata;
 	struct resource *res;
 	int ret;
 	unsigned short int value;
@@ -246,7 +256,7 @@ static int gxp_dbg_post_probe(struct platform_device *pdev)
 		return ret;
 	}
 
-	return sysfs_register(&pdev->dev, drvdata);
+	return sysfs_register(&pdev->dev);
 }
 
 static const struct of_device_id gxp_dbg_post_of_match[] = {
