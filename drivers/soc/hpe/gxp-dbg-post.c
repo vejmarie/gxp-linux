@@ -72,6 +72,7 @@ static int post_open(struct inode *inode, struct file *file)
 	                printk(KERN_INFO "DBG_POST: Postcode update 0x%02x \n", value);
 	                postcode = value;
        		 }
+		mutex_unlock(&drvdata->mutex);
 	}
 	return 0;
 }
@@ -155,14 +156,9 @@ static int sysfs_register(struct device *parent)
 	return 0;
 }
 
-unsigned long  interruptnb=0;
-
 static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
 {
 	unsigned short int value;
-	// struct gxp_dbg_post_drvdata *drvdata = (struct gxp_dbg_post_drvdata *)_drvdata;
-	interruptnb++;
-	// For the moment let's printk a message
 	mutex_lock(&drvdata->mutex);
 
         value = readl(drvdata->base + DBG_POST_PORTDATA);
@@ -170,11 +166,6 @@ static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
         	printk(KERN_INFO "DBG_POST: Interrupt update 0x%02x \n", value);
 		postcode = value;
 	}
-	/*
-	if (interruptnb % 10000 == 0) {
-		printk(KERN_INFO "DBG_POST: Inerrupt number %ld\n", interruptnb);
-	}
-	*/
 	// update CSR
 	value = readw(drvdata->base + DBG_POST_CSR);
 	writew( value | 0xc, drvdata->base + DBG_POST_CSR);
