@@ -62,6 +62,7 @@ static int post_open(struct inode *inode, struct file *file)
 	printk("Device open\n");
 	// We need to wait for the interrupt to be launched if state
 	// is null. or let it go if postcode value is not null after reading it
+	previouspostcode = 0;
 	if (postcode == 0)
 	{
 	        unsigned short int value;
@@ -80,8 +81,8 @@ static int post_open(struct inode *inode, struct file *file)
 static int post_read(struct file *f, char __user *buf, size_t len, loff_t *off)
 {
         printk("Device open\n");
+        printk(KERN_INFO "DBG_POST: Interrupt update 0x%02x 0x%02x\n", postcode, previouspostcode);
 	wait_event_interruptible(wq, postcode == previouspostcode);
-	previouspostcode = postcode;
 	if (copy_to_user(buf, &postcode, 1)) {
         	return -EFAULT;
     	}
@@ -164,6 +165,7 @@ static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
         value = readl(drvdata->base + DBG_POST_PORTDATA);
 	if (postcode != value ) {
         	printk(KERN_INFO "DBG_POST: Interrupt update 0x%02x \n", value);
+		previouspostcode = postcode;
 		postcode = value;
 	}
 	// update CSR
