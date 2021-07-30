@@ -62,19 +62,16 @@ static int post_open(struct inode *inode, struct file *file)
 	printk("Device open\n");
 	// We need to wait for the interrupt to be launched if state
 	// is null. or let it go if postcode value is not null after reading it
-	previouspostcode = 0;
-	if (postcode == 0)
-	{
-	        unsigned short int value;
-       		mutex_lock(&drvdata->mutex);
-       		value = readl(drvdata->base + DBG_POST_PORTDATA);
+	unsigned short int value;
+       	mutex_lock(&drvdata->mutex);
+       	value = readl(drvdata->base + DBG_POST_PORTDATA);
 
-	        if (postcode != value ) {
-	                printk(KERN_INFO "DBG_POST: Postcode update 0x%02x \n", value);
-	                postcode = value;
-       		 }
-		mutex_unlock(&drvdata->mutex);
-	}
+	if (postcode != value ) {
+	       printk(KERN_INFO "DBG_POST: Postcode update 0x%02x \n", value);
+	       previouspostcode = postcode ;
+	       postcode = value;
+       	 }
+	mutex_unlock(&drvdata->mutex);
 	return 0;
 }
 
