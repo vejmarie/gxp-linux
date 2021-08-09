@@ -32,6 +32,7 @@
 #include <linux/device.h>
 #include <linux/cdev.h>
 #include <linux/wait.h>
+#include <linux/sched.h>
 
 #include "gxp-soclib.h"
 
@@ -54,36 +55,41 @@ struct gxp_dbg_post_drvdata *drvdata=NULL;
 unsigned int state=0;
 unsigned short int postcode =  0x00;
 unsigned short int previouspostcode = 0x00;
+unsigned short int initialvalue = 0x00;
 
 static DECLARE_WAIT_QUEUE_HEAD(wq);
 
 static int post_open(struct inode *inode, struct file *file)
 {
+	unsigned short int value;
 	printk("Device open\n");
+        value = readw(drvdata->base + DBG_POST_CSR);
+        printk(KERN_INFO "DBG: base csr value %02x\n", value);
 	// We need to wait for the interrupt to be launched if state
 	// is null. or let it go if postcode value is not null after reading it
-	unsigned short int value;
        	mutex_lock(&drvdata->mutex);
-       	value = readl(drvdata->base + DBG_POST_PORTDATA);
-
-	if (postcode != value ) {
-	       printk(KERN_INFO "DBG_POST: Postcode update 0x%02x \n", value);
-	       previouspostcode = postcode ;
-	       postcode = value;
-       	 }
+	postcode =  0x00;
+	previouspostcode = 0x00;
+	initialvalue = 0x00;
 	mutex_unlock(&drvdata->mutex);
 	return 0;
 }
 
 static int post_read(struct file *f, char __user *buf, size_t len, loff_t *off)
 {
-        printk("Device open\n");
-        printk(KERN_INFO "DBG_POST: Interrupt update 0x%02x 0x%02x\n", postcode, previouspostcode);
-	wait_event_interruptible(wq, postcode == previouspostcode);
+        printk(KERN_INFO "DBG_POST: seeking next value 0x%02x 0x%02x\n", postcode, previouspostcode);
+	if (initialvalue == 0x00) 
+	{
+		initialvalue = 0x01;
+	}
+	else
+	{
+		wait_event_interruptible(wq, postcode == previouspostcode);
+	}
 	if (copy_to_user(buf, &postcode, 1)) {
         	return -EFAULT;
     	}
-        return 0;
+        return 1;
 }
 
 static const struct file_operations post_fops = {
