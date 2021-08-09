@@ -98,11 +98,11 @@ static ssize_t dbg_post_show(struct device *dev,
 {
 	ssize_t ret;
 
-	mutex_lock(&drvdata->mutex);
+//	mutex_lock(&drvdata->mutex);
 
 	ret = sprintf(buf, "%d", state);
 
-	mutex_unlock(&drvdata->mutex);
+//	mutex_unlock(&drvdata->mutex);
 	return ret;
 }
 
@@ -157,7 +157,7 @@ static int sysfs_register(struct device *parent)
 static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
 {
 	unsigned short int value;
-	mutex_lock(&drvdata->mutex);
+//	mutex_lock(&drvdata->mutex);
 
         value = readl(drvdata->base + DBG_POST_PORTDATA);
 	if (postcode != value ) {
@@ -168,7 +168,7 @@ static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
 	// update CSR
 	value = readw(drvdata->base + DBG_POST_CSR);
 	writew( value | 0xc, drvdata->base + DBG_POST_CSR);
-        mutex_unlock(&drvdata->mutex);
+//        mutex_unlock(&drvdata->mutex);
 	wake_up_interruptible(&wq);
 	return IRQ_HANDLED;
 }
