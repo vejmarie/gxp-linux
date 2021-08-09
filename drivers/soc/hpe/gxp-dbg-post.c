@@ -86,6 +86,7 @@ static int post_read(struct file *f, char __user *buf, size_t len, loff_t *off)
 	{
 		printk(KERN_INFO "DBG_POST: Wait for postcode != previouspostcode \n");
 		wait_event_interruptible(wq, postcode != previouspostcode);
+		previouspostcode = postcode;
 	}
 	if (copy_to_user(buf, &postcode, 1)) {
         	return -EFAULT;
