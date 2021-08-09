@@ -68,7 +68,7 @@ static int post_open(struct inode *inode, struct file *file)
 	// We need to wait for the interrupt to be launched if state
 	// is null. or let it go if postcode value is not null after reading it
        	mutex_lock(&drvdata->mutex);
-	postcode =  0x00;
+        postcode = readl(drvdata->base + DBG_POST_PORTDATA);
 	previouspostcode = 0x00;
 	initialvalue = 0x00;
 	mutex_unlock(&drvdata->mutex);
@@ -84,7 +84,8 @@ static int post_read(struct file *f, char __user *buf, size_t len, loff_t *off)
 	}
 	else
 	{
-		wait_event_interruptible(wq, postcode == previouspostcode);
+		printk(KERN_INFO "DBG_POST: Wait for postcode != previouspostcode \n");
+		wait_event_interruptible(wq, postcode != previouspostcode);
 	}
 	if (copy_to_user(buf, &postcode, 1)) {
         	return -EFAULT;
