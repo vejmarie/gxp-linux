@@ -87,7 +87,6 @@ static int post_release(struct inode *inode, struct file *filp)
 	mutex_lock(&drvdata->mutex);
 	count--;
 	mutex_unlock(&drvdata->mutex);
-	MOD_DEC_USE_COUNT;
 	return 0;
 }
 
