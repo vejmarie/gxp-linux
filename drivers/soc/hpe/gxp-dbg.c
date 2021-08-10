@@ -45,18 +45,17 @@ struct gxp_dbg_post_drvdata {
 	void __iomem *base;
 	struct mutex mutex;
         int irq;
+	unsigned int state=0;
+	unsigned short int postcode =  0x00;
+	unsigned short int previouspostcode = 0xFF;
+	unsigned short int initialvalue = 0x00;
+	unsigned short int count = 0x00;
+	static dev_t postcodedev;
+	static struct cdev postcode_c_dev; 
+	static struct class *postcode_cl; 
 };
 
-static dev_t first;
-static struct cdev c_dev; 
-static struct class *cl; 
 struct gxp_dbg_post_drvdata *drvdata=NULL;
-
-unsigned int state=0;
-unsigned short int postcode =  0x00;
-unsigned short int previouspostcode = 0xFF;
-unsigned short int initialvalue = 0x00;
-unsigned short int count = 0x00;
 
 static DECLARE_WAIT_QUEUE_HEAD(wq);
 
@@ -69,15 +68,15 @@ static int post_open(struct inode *inode, struct file *file)
 	// We need to wait for the interrupt to be launched if state
 	// is null. or let it go if postcode value is not null after reading it
        	mutex_lock(&drvdata->mutex);
-	if ( count > 0 )
+	if ( drvdata->count > 0 )
 	{
 		mutex_unlock(&drvdata->mutex);
 		return -EBUSY;
 	}
-        postcode = readl(drvdata->base + DBG_POST_PORTDATA);
-	previouspostcode = 0xFF;
-	initialvalue = 0x00;
-	count++;
+        drvdata->postcode = readl(drvdata->base + DBG_POST_PORTDATA);
+	drvdata->previouspostcode = 0xFF;
+	drvdata->initialvalue = 0x00;
+	drvdata->count++;
 	mutex_unlock(&drvdata->mutex);
 	return 0;
 }
@@ -85,20 +84,20 @@ static int post_open(struct inode *inode, struct file *file)
 static int post_release(struct inode *inode, struct file *filp)
 {
 	mutex_lock(&drvdata->mutex);
-	count--;
+	drvdata->count--;
 	mutex_unlock(&drvdata->mutex);
 	return 0;
 }
 
 static int post_read(struct file *f, char __user *buf, size_t len, loff_t *off)
 {
-        printk(KERN_INFO "DBG_POST: seeking next value 0x%02x 0x%02x\n", postcode, previouspostcode);
+        printk(KERN_INFO "DBG_POST: seeking next value 0x%02x 0x%02x\n", drvdata->postcode, drvdata->previouspostcode);
 	// whatever happens we need to return an initial value even if postcode == 0 and previouspostcode == 0
 	// this case is happening when the system is offline
 	printk(KERN_INFO "DBG_POST: Wait for postcode != previouspostcode \n");
-	wait_event_interruptible(wq, postcode != previouspostcode);
-	previouspostcode = postcode;
-	if (copy_to_user(buf, &postcode, 1)) {
+	wait_event_interruptible(wq, drvdata->postcode != drvdata->previouspostcode);
+	drvdata->previouspostcode = drvdata->postcode;
+	if (copy_to_user(buf, &drvdata->postcode, 2)) {
         	return -EFAULT;
     	}
         return 1;
@@ -119,7 +118,7 @@ static ssize_t dbg_post_show(struct device *dev,
 
 //	mutex_lock(&drvdata->mutex);
 
-	ret = sprintf(buf, "%d", state);
+	ret = sprintf(buf, "%d", drvdata->state);
 
 //	mutex_unlock(&drvdata->mutex);
 	return ret;
@@ -140,8 +139,8 @@ static ssize_t dbg_post_store(struct device *dev, struct device_attribute *attr,
 
         mutex_lock(&drvdata->mutex);
 
-	state = input;
-	if (state == 1)
+	drvdata->state = input;
+	if (drvdata->state == 1)
 	{
 		value = readw(drvdata->base + DBG_POST_CSR);
 	        printk(KERN_INFO "DBG: base csr value %02x\n", value);
@@ -179,10 +178,10 @@ static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
 //	mutex_lock(&drvdata->mutex);
 
         value = readl(drvdata->base + DBG_POST_PORTDATA);
-	if (postcode != value ) {
+	if (drvdata->postcode != value ) {
         	printk(KERN_INFO "DBG_POST: Interrupt update 0x%02x \n", value);
-		previouspostcode = postcode;
-		postcode = value;
+		drvdata->previouspostcode = drvdata->postcode;
+		drvdata->postcode = value;
 	}
 	// update CSR
 	value = readw(drvdata->base + DBG_POST_CSR);
@@ -192,7 +191,7 @@ static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
 	return IRQ_HANDLED;
 }
 
-static int gxp_dbg_post_probe(struct platform_device *pdev)
+static int gxp_dbg_probe(struct platform_device *pdev)
 {
 	struct resource *res;
 	int ret;
@@ -207,6 +206,12 @@ static int gxp_dbg_post_probe(struct platform_device *pdev)
 
 	drvdata->pdev = pdev;
 	platform_set_drvdata(pdev, drvdata);
+
+	drvdata->state=0;
+	drvdata->postcode =  0x00;
+	drvdata->previouspostcode = 0xFF;
+	drvdata->initialvalue = 0x00;
+	drvdata->count = 0x00;
 
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	drvdata->base = devm_ioremap_resource(&pdev->dev, res);
@@ -227,61 +232,55 @@ static int gxp_dbg_post_probe(struct platform_device *pdev)
 				"gxp-dbg-post",
 				drvdata);
 
-	// Let's start the irq
-	printk(KERN_INFO "DBG: base csr address %04x\n", drvdata->base + DBG_POST_CSR);
-	value = readw(drvdata->base + DBG_POST_CSR);
-	printk(KERN_INFO "DBG: base csr value %02x\n", value);
-	value = value | 0xf;
-	writew( value, drvdata->base + DBG_POST_CSR);
-
 	mutex_init(&drvdata->mutex);
 
 
 	// Let's create the character device for the output
-	//
 
-	if ((ret = alloc_chrdev_region(&first, 0, 1, "gxp-dbg-post")) < 0)
+	if ((ret = alloc_chrdev_region(&drvdata->postcodedev, 0, 1, "gxp-dbg-post")) < 0)
 	{
 	        return ret;
 	}
-	if (IS_ERR(cl = class_create(THIS_MODULE, "chardrv")))
+	if (IS_ERR(drvdata->postcode_cl = class_create(THIS_MODULE, "chardrv")))
 	{
-		unregister_chrdev_region(first, 1);
-		return PTR_ERR(cl);
+		unregister_chrdev_region(drvdata->postcodedev, 1);
+		return PTR_ERR(drvdata->postcode_cl);
 	}
-	if (IS_ERR(dev_ret = device_create(cl, NULL, first, NULL, "postcode")))
+	if (IS_ERR(dev_ret = device_create(drvdata->postcode_cl, NULL, drvdata->postcodedev, NULL, "postcode")))
 	{
-		class_destroy(cl);
-		unregister_chrdev_region(first, 1);
+		class_destroy(drvdata->postcode_cl);
+		unregister_chrdev_region(drvdata->postcodedev, 1);
 		return PTR_ERR(dev_ret);
 	}
 
-	cdev_init(&c_dev, &post_fops);
-	if ((ret = cdev_add(&c_dev, first, 1)) < 0)
+	cdev_init(&drvdata->postcode_c_dev, &post_fops);
+	if ((ret = cdev_add(&drvdata->postcode_c_dev, drvdata->postcodedev, 1)) < 0)
 	{
-		device_destroy(cl, first);
-		class_destroy(cl);
-		unregister_chrdev_region(first, 1);
+		device_destroy(drvdata->postcode_cl, drvdata->postcodedev);
+		class_destroy(drvdata->postcode_cl);
+		unregister_chrdev_region(drvdata->postcodedev, 1);
 		return ret;
 	}
+
+	// register driver control through sysfs
 
 	return sysfs_register(&pdev->dev);
 }
 
-static const struct of_device_id gxp_dbg_post_of_match[] = {
-	{ .compatible = "hpe,gxp-dbg-post" },
+static const struct of_device_id gxp_dbg_of_match[] = {
+	{ .compatible = "hpe,gxp-dbg" },
 	{},
 };
-MODULE_DEVICE_TABLE(of, gxp_dbg_post_of_match);
+MODULE_DEVICE_TABLE(of, gxp_dbg_of_match);
 
 static struct platform_driver gxp_dbg_post_driver = {
-	.probe = gxp_dbg_post_probe,
+	.probe = gxp_dbg_probe,
 	.driver = {
-		.name = "gxp-dbg-post",
-		.of_match_table = of_match_ptr(gxp_dbg_post_of_match),
+		.name = "gxp-dbg",
+		.of_match_table = of_match_ptr(gxp_dbg_of_match),
 	},
 };
-module_platform_driver(gxp_dbg_post_driver);
+module_platform_driver(gxp_dbg_driver);
 
 MODULE_AUTHOR("Jean-Marie Verdun <jean-marie.verdun@hpe.com>");
-MODULE_DESCRIPTION("HPE GXP DBG POST Driver");
+MODULE_DESCRIPTION("HPE GXP DBG Driver");

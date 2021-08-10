@@ -46,7 +46,7 @@ config HPE_GXP_CHIF
 	help
 	  Say yes here to add support for CHIF
 
-config HPE_GXP_DBG_POST
+config HPE_GXP_DBG
         bool "GXP host debug post message support"
         depends on ARCH_HPE_GXP
         select HPE_GXP_SOCLIB
