@@ -54,7 +54,7 @@ struct gxp_dbg_post_drvdata *drvdata=NULL;
 
 unsigned int state=0;
 unsigned short int postcode =  0x00;
-unsigned short int previouspostcode = 0x00;
+unsigned short int previouspostcode = 0xFF;
 unsigned short int initialvalue = 0x00;
 
 static DECLARE_WAIT_QUEUE_HEAD(wq);
@@ -69,7 +69,7 @@ static int post_open(struct inode *inode, struct file *file)
 	// is null. or let it go if postcode value is not null after reading it
        	mutex_lock(&drvdata->mutex);
         postcode = readl(drvdata->base + DBG_POST_PORTDATA);
-	previouspostcode = 0x00;
+	previouspostcode = 0xFF;
 	initialvalue = 0x00;
 	mutex_unlock(&drvdata->mutex);
 	return 0;
@@ -78,16 +78,11 @@ static int post_open(struct inode *inode, struct file *file)
 static int post_read(struct file *f, char __user *buf, size_t len, loff_t *off)
 {
         printk(KERN_INFO "DBG_POST: seeking next value 0x%02x 0x%02x\n", postcode, previouspostcode);
-	if (initialvalue == 0x00) 
-	{
-		initialvalue = 0x01;
-	}
-	else
-	{
-		printk(KERN_INFO "DBG_POST: Wait for postcode != previouspostcode \n");
-		wait_event_interruptible(wq, postcode != previouspostcode);
-		previouspostcode = postcode;
-	}
+	// whatever happens we need to return an initial value even if postcode == 0 and previouspostcode == 0
+	// this case is happening when the system is offline
+	printk(KERN_INFO "DBG_POST: Wait for postcode != previouspostcode \n");
+	wait_event_interruptible(wq, postcode != previouspostcode);
+	previouspostcode = postcode;
 	if (copy_to_user(buf, &postcode, 1)) {
         	return -EFAULT;
     	}
