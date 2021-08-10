@@ -56,6 +56,7 @@ unsigned int state=0;
 unsigned short int postcode =  0x00;
 unsigned short int previouspostcode = 0xFF;
 unsigned short int initialvalue = 0x00;
+unsigned short int count = 0x00;
 
 static DECLARE_WAIT_QUEUE_HEAD(wq);
 
@@ -68,10 +69,25 @@ static int post_open(struct inode *inode, struct file *file)
 	// We need to wait for the interrupt to be launched if state
 	// is null. or let it go if postcode value is not null after reading it
        	mutex_lock(&drvdata->mutex);
+	if ( count > 0 )
+	{
+		mutex_unlock(&drvdata->mutex);
+		return -EBUSY;
+	}
         postcode = readl(drvdata->base + DBG_POST_PORTDATA);
 	previouspostcode = 0xFF;
 	initialvalue = 0x00;
+	count++;
 	mutex_unlock(&drvdata->mutex);
+	return 0;
+}
+
+static int post_release(struct inode *inode, struct file *filp)
+{
+	mutex_lock(&drvdata->mutex);
+	count--;
+	mutex_unlock(&drvdata->mutex);
+	MOD_DEC_USE_COUNT;
 	return 0;
 }
 
@@ -93,6 +109,7 @@ static const struct file_operations post_fops = {
         .owner          = THIS_MODULE,
         .open           = post_open,
 	.read		= post_read,
+	.release	= post_release,
 };
 
 
