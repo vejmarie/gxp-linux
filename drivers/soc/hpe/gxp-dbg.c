@@ -154,11 +154,11 @@ static ssize_t dbg_post_store(struct device *dev, struct device_attribute *attr,
 
 static DEVICE_ATTR_RW(dbg_post);
 
-static struct attribute *dbg_post_attrs[] = {
-	&dev_attr_dbg_post.attr,
+static struct attribute *dbg_attrs[] = {
+	&dev_attr_postcode_enable.attr,
 	NULL,
 };
-ATTRIBUTE_GROUPS(dbg_post);
+ATTRIBUTE_GROUPS(dbg);
 
 static int sysfs_register(struct device *parent)
 {
