@@ -50,9 +50,9 @@ struct gxp_dbg_drvdata {
 	unsigned short int previouspostcode;
 	unsigned short int initialvalue;
 	unsigned short int count;
-	static dev_t postcodedev;
-	static struct cdev postcode_c_dev; 
-	static struct class *postcode_cl; 
+	dev_t postcodedev;
+	struct cdev postcode_c_dev; 
+	struct class *postcode_cl; 
 };
 
 struct gxp_dbg_drvdata *drvdata=NULL;
@@ -111,7 +111,7 @@ static const struct file_operations post_fops = {
 };
 
 
-static ssize_t dbg_post_show(struct device *dev,
+static ssize_t postcode_enable_show(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
 	ssize_t ret;
@@ -124,7 +124,7 @@ static ssize_t dbg_post_show(struct device *dev,
 	return ret;
 }
 
-static ssize_t dbg_post_store(struct device *dev, struct device_attribute *attr,
+static ssize_t postcode_enable_store(struct device *dev, struct device_attribute *attr,
                         const char *buf, size_t count)
 {
         unsigned int input;
@@ -152,7 +152,7 @@ static ssize_t dbg_post_store(struct device *dev, struct device_attribute *attr,
         return count;
 }
 
-static DEVICE_ATTR_RW(dbg_post);
+static DEVICE_ATTR_RW(postcode_enable);
 
 static struct attribute *dbg_attrs[] = {
 	&dev_attr_postcode_enable.attr,
@@ -165,7 +165,7 @@ static int sysfs_register(struct device *parent)
 	struct device *dev;
 	printk(KERN_INFO "registering dbg_post into sysfs\n");
 	dev = device_create_with_groups(soc_class, parent, 0,
-					drvdata, dbg_post_groups, "dbg");
+					drvdata, dbg_groups, "dbg");
 	if (IS_ERR(dev))
 		return PTR_ERR(dev);
 	drvdata->dev = dev;
