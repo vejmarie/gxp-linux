@@ -195,11 +195,10 @@ static int gxp_dbg_probe(struct platform_device *pdev)
 {
 	struct resource *res;
 	int ret;
-	unsigned short int value;
 	struct device *dev_ret;
 
 	printk(KERN_INFO "Initializing dbg_post driver\n");
-	drvdata = devm_kzalloc(&pdev->dev, sizeof(struct gxp_dbg_post_drvdata),
+	drvdata = devm_kzalloc(&pdev->dev, sizeof(struct gxp_dbg_drvdata),
 				GFP_KERNEL);
 	if (!drvdata)
 		return -ENOMEM;
