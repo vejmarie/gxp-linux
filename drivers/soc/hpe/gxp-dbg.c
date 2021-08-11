@@ -165,7 +165,7 @@ static int sysfs_register(struct device *parent)
 	struct device *dev;
 	printk(KERN_INFO "registering dbg_post into sysfs\n");
 	dev = device_create_with_groups(soc_class, parent, 0,
-					drvdata, dbg_post_groups, "dbg_post");
+					drvdata, dbg_post_groups, "dbg");
 	if (IS_ERR(dev))
 		return PTR_ERR(dev);
 	drvdata->dev = dev;
