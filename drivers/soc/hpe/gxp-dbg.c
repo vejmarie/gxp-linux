@@ -39,23 +39,23 @@
 #define DBG_POST_PORTDATA		0x4
 #define DBG_POST_CSR			0x1E
 
-struct gxp_dbg_post_drvdata {
+struct gxp_dbg_drvdata {
 	struct platform_device *pdev;
 	struct device *dev;
 	void __iomem *base;
 	struct mutex mutex;
         int irq;
-	unsigned int state=0;
-	unsigned short int postcode =  0x00;
-	unsigned short int previouspostcode = 0xFF;
-	unsigned short int initialvalue = 0x00;
-	unsigned short int count = 0x00;
+	unsigned int state;
+	unsigned short int postcode;
+	unsigned short int previouspostcode;
+	unsigned short int initialvalue;
+	unsigned short int count;
 	static dev_t postcodedev;
 	static struct cdev postcode_c_dev; 
 	static struct class *postcode_cl; 
 };
 
-struct gxp_dbg_post_drvdata *drvdata=NULL;
+struct gxp_dbg_drvdata *drvdata=NULL;
 
 static DECLARE_WAIT_QUEUE_HEAD(wq);
 
@@ -273,7 +273,7 @@ static const struct of_device_id gxp_dbg_of_match[] = {
 };
 MODULE_DEVICE_TABLE(of, gxp_dbg_of_match);
 
-static struct platform_driver gxp_dbg_post_driver = {
+static struct platform_driver gxp_dbg_driver = {
 	.probe = gxp_dbg_probe,
 	.driver = {
 		.name = "gxp-dbg",
