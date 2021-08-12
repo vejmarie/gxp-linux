@@ -58,8 +58,7 @@ struct gxp_dbg_drvdata {
 struct gxp_dbg_drvdata *drvdata=NULL;
 
 static DECLARE_WAIT_QUEUE_HEAD(wq);
-static DECLARE_WAIT_QUEUE_HEAD(gxp_gpio);
-EXPORT_SYMBOL(gxp_gpio);
+extern static DECLARE_WAIT_QUEUE_HEAD(gxp_gpio);
 
 static int post_open(struct inode *inode, struct file *file)
 {

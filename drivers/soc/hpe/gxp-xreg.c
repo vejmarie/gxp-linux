@@ -21,6 +21,8 @@
 #include <linux/regmap.h>
 #include <linux/reset.h>
 #include <linux/sysfs.h>
+#include <linux/wait.h>
+#include <linux/sched.h>
 
 #include "gxp-soclib.h"
 
@@ -36,6 +38,9 @@
 #define XREG_INT_GRP5_MASK	0xB1
 #define XREG_INT_GRP5_STAT	0xB2
 #define XREG_INT_GRP5_PIN_BASE	59
+
+static DECLARE_WAIT_QUEUE_HEAD(gxp_gpio);
+EXPORT_SYMBOL(gxp_gpio);
 
 enum xreg_gpio_pn {
 	IOP_LED1 = 0,
