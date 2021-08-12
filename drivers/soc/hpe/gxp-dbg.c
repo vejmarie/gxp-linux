@@ -58,13 +58,13 @@ struct gxp_dbg_drvdata {
 struct gxp_dbg_drvdata *drvdata=NULL;
 
 static DECLARE_WAIT_QUEUE_HEAD(wq);
+static DECLARE_WAIT_QUEUE_HEAD(gxp_gpio);
+EXPORT_SYMBOL(gxp_gpio);
 
 static int post_open(struct inode *inode, struct file *file)
 {
 	unsigned short int value;
-	printk("Device open\n");
         value = readw(drvdata->base + DBG_POST_CSR);
-        printk(KERN_INFO "DBG: base csr value %02x\n", value);
 	// We need to wait for the interrupt to be launched if state
 	// is null. or let it go if postcode value is not null after reading it
        	mutex_lock(&drvdata->mutex);
@@ -91,10 +91,8 @@ static int post_release(struct inode *inode, struct file *filp)
 
 static int post_read(struct file *f, char __user *buf, size_t len, loff_t *off)
 {
-        printk(KERN_INFO "DBG_POST: seeking next value 0x%02x 0x%02x\n", drvdata->postcode, drvdata->previouspostcode);
 	// whatever happens we need to return an initial value even if postcode == 0 and previouspostcode == 0
 	// this case is happening when the system is offline
-	printk(KERN_INFO "DBG_POST: Wait for postcode != previouspostcode \n");
 	wait_event_interruptible(wq, drvdata->postcode != drvdata->previouspostcode);
 	drvdata->previouspostcode = drvdata->postcode;
 	if (copy_to_user(buf, &drvdata->postcode, 2)) {
@@ -116,11 +114,8 @@ static ssize_t postcode_enable_show(struct device *dev,
 {
 	ssize_t ret;
 
-//	mutex_lock(&drvdata->mutex);
-
 	ret = sprintf(buf, "%d", drvdata->state);
 
-//	mutex_unlock(&drvdata->mutex);
 	return ret;
 }
 
@@ -143,7 +138,6 @@ static ssize_t postcode_enable_store(struct device *dev, struct device_attribute
 	if (drvdata->state == 1)
 	{
 		value = readw(drvdata->base + DBG_POST_CSR);
-	        printk(KERN_INFO "DBG: base csr value %02x\n", value);
 	        value = value | 0xf;
 	        writew( value, drvdata->base + DBG_POST_CSR);
 	}
@@ -163,7 +157,6 @@ ATTRIBUTE_GROUPS(dbg);
 static int sysfs_register(struct device *parent)
 {
 	struct device *dev;
-	printk(KERN_INFO "registering dbg_post into sysfs\n");
 	dev = device_create_with_groups(soc_class, parent, 0,
 					drvdata, dbg_groups, "dbg");
 	if (IS_ERR(dev))
@@ -175,18 +168,17 @@ static int sysfs_register(struct device *parent)
 static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
 {
 	unsigned short int value;
-//	mutex_lock(&drvdata->mutex);
 
         value = readl(drvdata->base + DBG_POST_PORTDATA);
 	if (drvdata->postcode != value ) {
-        	printk(KERN_INFO "DBG_POST: Interrupt update 0x%02x \n", value);
+		mutex_lock(&drvdata->mutex);
 		drvdata->previouspostcode = drvdata->postcode;
 		drvdata->postcode = value;
+		mutex_unlock(&drvdata->mutex);
 	}
 	// update CSR
 	value = readw(drvdata->base + DBG_POST_CSR);
 	writew( value | 0xc, drvdata->base + DBG_POST_CSR);
-//        mutex_unlock(&drvdata->mutex);
 	wake_up_interruptible(&wq);
 	return IRQ_HANDLED;
 }
@@ -197,7 +189,7 @@ static int gxp_dbg_probe(struct platform_device *pdev)
 	int ret;
 	struct device *dev_ret;
 
-	printk(KERN_INFO "Initializing dbg_post driver\n");
+	printk(KERN_INFO "GXP DBG Driver initizalisation\n");
 	drvdata = devm_kzalloc(&pdev->dev, sizeof(struct gxp_dbg_drvdata),
 				GFP_KERNEL);
 	if (!drvdata)
