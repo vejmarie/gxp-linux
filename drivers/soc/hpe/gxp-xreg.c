@@ -230,9 +230,13 @@ static int gxp_gpio_xreg_get(struct gpio_chip *chip, unsigned int offset)
 		if ( affectedinterrupt == 18 ) // bit 18 from B0 is a transition from S4/S5 to S0 from the chipset
 		{
 			if ( ret ) 
-				printk(KERN_INFO "Power down\n");
-			else
+			{
 				printk(KERN_INFO "Power up\n");
+				// let's wake up the thread which requires a power transition info
+				wake_up_interruptible(&gxp_gpio);
+			}
+			else
+				printk(KERN_INFO "Power down\n");
 		}
 		break;
 	case 62 ... 65:

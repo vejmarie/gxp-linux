@@ -33,6 +33,7 @@
 #include <linux/cdev.h>
 #include <linux/wait.h>
 #include <linux/sched.h>
+#include <linux/kthread.h>       
 
 #include "gxp-soclib.h"
 
@@ -53,6 +54,7 @@ struct gxp_dbg_drvdata {
 	dev_t postcodedev;
 	struct cdev postcode_c_dev; 
 	struct class *postcode_cl; 
+	struct task_struct *powermngt_thread;
 };
 
 struct gxp_dbg_drvdata *drvdata=NULL;
@@ -106,6 +108,16 @@ static const struct file_operations post_fops = {
 	.read		= post_read,
 	.release	= post_release,
 };
+
+// This function is a kthread
+static int wait_power_transition(void *pv)
+{
+	while(1)
+	{
+	        wait_event_interruptible(gxp_gpio, TRUE);
+		printk(KERN_INFO "Power on event received\n");
+	}
+}
 
 
 static ssize_t postcode_enable_show(struct device *dev,
@@ -251,6 +263,15 @@ static int gxp_dbg_probe(struct platform_device *pdev)
 		unregister_chrdev_region(drvdata->postcodedev, 1);
 		return ret;
 	}
+
+	// let's start the power transition thread
+	powermngt_thread = kthread_run(wait_power_transition,NULL,"Power Management Thread");
+        if(powermngt_thread) {
+            pr_info("Kthread Created Successfully...\n");
+        } else {
+            pr_err("Cannot create kthread\n");
+             goto r_device;
+        }
 
 	// register driver control through sysfs
 
