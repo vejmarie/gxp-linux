@@ -190,6 +190,8 @@ static int gxp_gpio_xreg_get(struct gpio_chip *chip, unsigned int offset)
 	unsigned int val;
 	int ret = 0;
 
+	printk(KERN_INFO "gxp_gpio_xreg_get: %d\n", offset);
+
 	switch (offset) {
 	case IOP_LED1 ... IOP_LED8:
 		//offset 0x40 bit 0~7
@@ -245,6 +247,8 @@ static void gxp_gpio_xreg_set(struct gpio_chip *chip,
 			unsigned int offset, int value)
 {
 	struct gxp_xreg_drvdata *drvdata = dev_get_drvdata(chip->parent);
+
+	printk(KERN_INFO "gxp_gpio_xreg_set: %d %d\n", offset, value);
 
 	switch (offset) {
 	case IOP_LED1 ... IOP_LED8:
