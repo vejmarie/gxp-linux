@@ -34,6 +34,7 @@
 #include <linux/wait.h>
 #include <linux/sched.h>
 #include <linux/kthread.h>       
+#include <linux/delay.h>
 
 #include "gxp-soclib.h"
 
@@ -115,8 +116,9 @@ static int wait_power_transition(void *pv)
 {
 	while(1)
 	{
-	        wait_event_interruptible(gxp_gpio, gxp_pch_s0 != 0);
-		printk(KERN_INFO "Power on event received\n");
+//	        wait_event_interruptible(gxp_gpio, gxp_pch_s0 != 0);
+		msleep(2000);
+		printk(KERN_INFO "Power on event received %d\n", gxp_pch_s0);
 	}
 }
 
