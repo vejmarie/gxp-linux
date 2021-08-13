@@ -409,7 +409,7 @@ static int gxp_gpio_probe(struct platform_device *pdev)
 	struct gxp_gpio_drvdata *drvdata;
 	struct device *dev = &pdev->dev;
 	struct device *parent;
-
+        printk(KERN_INFO "Init GPIO\n"); 
 	parent = dev->parent;
 	if (!parent) {
 		dev_err(dev, "no parent\n");
