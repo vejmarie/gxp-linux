@@ -265,12 +265,12 @@ static int gxp_dbg_probe(struct platform_device *pdev)
 	}
 
 	// let's start the power transition thread
-	powermngt_thread = kthread_run(wait_power_transition,NULL,"Power Management Thread");
-        if(powermngt_thread) {
+	drvdata->powermngt_thread = kthread_run(wait_power_transition,NULL,"Power Management Thread");
+        if(drvdata->powermngt_thread) {
             pr_info("Kthread Created Successfully...\n");
         } else {
             pr_err("Cannot create kthread\n");
-             goto r_device;
+	    return -1;
         }
 
 	// register driver control through sysfs
