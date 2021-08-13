@@ -225,7 +225,7 @@ static int gxp_gpio_xreg_get(struct gpio_chip *chip, unsigned int offset)
 	case PWR_BTN_INT ... SLP_INT:
 		regmap_read(drvdata->xreg_map, XREG_INT_GRP5_FLAG, &val);
 		ret = (val&BIT((offset - PWR_BTN_INT) + 16))?0:1;  // Active_low for default
-		printk(KERN_INFO "gxp_gpio_xreg_get: %d %d\n", offset, ret);
+		printk(KERN_INFO "gxp_gpio_xreg_get: %x %02x %d %d %x\n", drvdata->xreg_map, XREG_INT_GRP5_FLAG, offset, ret, val);
 		break;
 	case 62 ... 65:
 		// Placehold for NMI_BUTTON/RESET_BUTTON/SIO_S5/SIO_ONCONTROL
