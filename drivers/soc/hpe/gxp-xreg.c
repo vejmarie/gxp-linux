@@ -232,7 +232,7 @@ static int gxp_gpio_xreg_get(struct gpio_chip *chip, unsigned int offset)
 			if ( ret ) 
 				printk(KERN_INFO "Power down\n");
 			else
-				printk(KERN_INFO "Power up\n")
+				printk(KERN_INFO "Power up\n");
 		}
 		break;
 	case 62 ... 65:
