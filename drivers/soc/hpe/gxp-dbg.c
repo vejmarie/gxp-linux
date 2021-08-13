@@ -114,7 +114,7 @@ static int wait_power_transition(void *pv)
 {
 	while(1)
 	{
-	        wait_event_interruptible(gxp_gpio, TRUE);
+	        wait_event_interruptible(gxp_gpio, true);
 		printk(KERN_INFO "Power on event received\n");
 	}
 }
