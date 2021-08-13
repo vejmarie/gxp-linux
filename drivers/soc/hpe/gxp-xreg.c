@@ -223,9 +223,9 @@ static int gxp_gpio_xreg_get(struct gpio_chip *chip, unsigned int offset)
 		ret = (val&BIT(offset - FAN9_ID))?1:0;
 		break;
 	case PWR_BTN_INT ... SLP_INT:
-		printk(KERN_INFO "gxp_gpio_xreg_get: %d\n", offset);
 		regmap_read(drvdata->xreg_map, XREG_INT_GRP5_FLAG, &val);
 		ret = (val&BIT((offset - PWR_BTN_INT) + 16))?0:1;  // Active_low for default
+		printk(KERN_INFO "gxp_gpio_xreg_get: %d\n", offset, ret);
 		break;
 	case 62 ... 65:
 		// Placehold for NMI_BUTTON/RESET_BUTTON/SIO_S5/SIO_ONCONTROL
