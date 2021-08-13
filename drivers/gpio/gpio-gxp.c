@@ -348,6 +348,7 @@ static int gxp_gpio_get(struct gpio_chip *chip, unsigned int offset)
 static void gxp_gpio_set(struct gpio_chip *chip,
 			unsigned int offset, int value)
 {
+	printk(KERN_INFO "Setting GPIo %d to %d\n",offset,value);
 	if (offset < 200)
 		csm_gpio_set(chip, offset, value);
 	else if (offset >= 250 && offset < 300)
