@@ -188,6 +188,7 @@ static int gxp_gpio_xreg_get(struct gpio_chip *chip, unsigned int offset)
 {
 	struct gxp_xreg_drvdata *drvdata = dev_get_drvdata(chip->parent);
 	unsigned int val;
+	int affectedinterrupt;
 	int ret = 0;
 
 	switch (offset) {
@@ -223,9 +224,16 @@ static int gxp_gpio_xreg_get(struct gpio_chip *chip, unsigned int offset)
 		ret = (val&BIT(offset - FAN9_ID))?1:0;
 		break;
 	case PWR_BTN_INT ... SLP_INT:
+		affectedinterrupt = (offset - PWR_BTN_INT) + 16;
 		regmap_read(drvdata->xreg_map, XREG_INT_GRP5_FLAG, &val);
 		ret = (val&BIT((offset - PWR_BTN_INT) + 16))?0:1;  // Active_low for default
-		printk(KERN_INFO "gxp_gpio_xreg_get: %x %02x %d %d %x\n", drvdata->xreg_map, XREG_INT_GRP5_FLAG, offset, ret, val);
+		if ( affectedinterrupt == 18 ) // bit 18 from B0 is a transition from S4/S5 to S0 from the chipset
+		{
+			if ( ret ) 
+				printk(KERN_INFO "Power down\n");
+			else
+				printk(KERN_INFO "Power up\n")
+		}
 		break;
 	case 62 ... 65:
 		// Placehold for NMI_BUTTON/RESET_BUTTON/SIO_S5/SIO_ONCONTROL
