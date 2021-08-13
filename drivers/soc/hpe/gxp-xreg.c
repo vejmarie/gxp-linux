@@ -40,7 +40,9 @@
 #define XREG_INT_GRP5_PIN_BASE	59
 
 static DECLARE_WAIT_QUEUE_HEAD(gxp_gpio);
+static unsigned int gxp_pch_s0;
 EXPORT_SYMBOL(gxp_gpio);
+EXPORT_SYMBOL(gxp_pch_s0);
 
 enum xreg_gpio_pn {
 	IOP_LED1 = 0,
@@ -233,10 +235,14 @@ static int gxp_gpio_xreg_get(struct gpio_chip *chip, unsigned int offset)
 			{
 				printk(KERN_INFO "Power up\n");
 				// let's wake up the thread which requires a power transition info
+				gxp_pch_s0 = 1;
 				wake_up_interruptible(&gxp_gpio);
 			}
 			else
+			{
+				gxp_pch_s0 = 0;
 				printk(KERN_INFO "Power down\n");
+			}
 		}
 		break;
 	case 62 ... 65:
@@ -445,6 +451,8 @@ static int gxp_xreg_probe(struct platform_device *pdev)
 	int ret;
 	struct gxp_xreg_drvdata *drvdata;
 	struct resource *res;
+
+	gxp_pch_s0 = 0;
 
 	drvdata = devm_kzalloc(&pdev->dev,
 				sizeof(struct gxp_xreg_drvdata), GFP_KERNEL);
