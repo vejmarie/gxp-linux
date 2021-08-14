@@ -237,6 +237,7 @@ static int gxp_gpio_xreg_get(struct gpio_chip *chip, unsigned int offset)
 				// let's wake up the thread which requires a power transition info
 				gxp_pch_s0 = 1;
 				wake_up_interruptible(&gxp_gpio);
+				printk(KERN_INFO "GXP_GPIO %x\n", &gxp_gpio);
 			}
 			else
 			{

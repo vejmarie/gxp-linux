@@ -61,7 +61,7 @@ struct gxp_dbg_drvdata {
 struct gxp_dbg_drvdata *drvdata=NULL;
 
 static DECLARE_WAIT_QUEUE_HEAD(wq);
-extern DECLARE_WAIT_QUEUE_HEAD(gxp_gpio);
+extern wait_queue_head_t *gxp_gpio;
 extern unsigned int gxp_pch_s0;
 
 static int post_open(struct inode *inode, struct file *file)
@@ -116,9 +116,9 @@ static int wait_power_transition(void *pv)
 {
 	while(1)
 	{
-//	        wait_event_interruptible(gxp_gpio, gxp_pch_s0 != 0);
+	        wait_event_interruptible(gxp_gpio, gxp_pch_s0 != 0);
 		msleep(2000);
-		printk(KERN_INFO "Power on event received %d\n", gxp_pch_s0);
+		printk(KERN_INFO "Power on event received %d %x\n", gxp_pch_s0, gxp_gpio);
 	}
 }
 
