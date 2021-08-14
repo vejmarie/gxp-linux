@@ -39,7 +39,7 @@
 #define XREG_INT_GRP5_STAT	0xB2
 #define XREG_INT_GRP5_PIN_BASE	59
 
-static DECLARE_WAIT_QUEUE_HEAD(gxp_gpio);
+DECLARE_WAIT_QUEUE_HEAD(gxp_gpio);
 unsigned int gxp_pch_s0;
 EXPORT_SYMBOL(gxp_gpio);
 EXPORT_SYMBOL(gxp_pch_s0);
