@@ -120,7 +120,7 @@ static int wait_power_transition(void *pv)
 	        wait_event_interruptible(gxp_gpio, gxp_pch_s0 != 0 );
 		msleep(2000);
 		{
-			if ( drvdata->state == 0 )  && ( gxp_pch_s0 == 1 )
+			if (( drvdata->state == 0 )  && ( gxp_pch_s0 == 1 ))
 			{
 			printk(KERN_INFO "Power on event received %d %x\n", gxp_pch_s0, gxp_gpio);
 /*			value = readw(drvdata->base + DBG_POST_CSR);
