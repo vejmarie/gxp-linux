@@ -118,14 +118,22 @@ static int wait_power_transition(void *pv)
 	while(1)
 	{
 	        wait_event_interruptible(gxp_gpio, gxp_pch_s0 != 0 );
-		if ( drvdata->state == 0 )
 		{
+			if ( drvdata->state == 0 ) 
+			{
 			printk(KERN_INFO "Power on event received %d %x\n", gxp_pch_s0, gxp_gpio);
 			value = readw(drvdata->base + DBG_POST_CSR);
 	                value = value | 0xf;
 	                writew( value, drvdata->base + DBG_POST_CSR);
 			drvdata->state = 1;
 			printk(KERN_INFO "postcode interrupt started\n");
+			}
+			if ( gxp_pch_s0 == 2 )
+			{
+				// we reset the power state, as a transition to off happened
+				drvdata->state = 0;
+				gxp_pch_s0 = 0;
+			}
 		}
 	}
 }
