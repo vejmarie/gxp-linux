@@ -235,24 +235,18 @@ static int gxp_gpio_xreg_get(struct gpio_chip *chip, unsigned int offset)
 			{
 				printk(KERN_INFO "Power up\n");
 				// let's wake up the thread which requires a power transition info
-				if ( gxp_pch_s0 == 0 )
-				{
-					gxp_pch_s0 = 1;
-					wake_up_interruptible(&gxp_gpio);
-					printk(KERN_INFO "GXP_GPIO %x\n", gxp_gpio);
-				}
+				gxp_pch_s0 = 1;
+				wake_up_interruptible(&gxp_gpio);
+				printk(KERN_INFO "GXP_GPIO %x\n", gxp_gpio);
 			}
-/*			else
+			else
 			{
-				if ( gxp_pch_s0 == 1 ) 
-				{
-					// We signal the transition to power down
-					gxp_pch_s0 = 2;
-					wake_up_interruptible(&gxp_gpio);
-				}
+				// We signal the transition to power down
+				gxp_pch_s0 = 2;
+				wake_up_interruptible(&gxp_gpio);
 				printk(KERN_INFO "Power down\n");
 			}
-*/
+
 		}
 		break;
 	case 62 ... 65:
