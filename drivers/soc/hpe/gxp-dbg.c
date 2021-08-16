@@ -127,7 +127,8 @@ static int wait_power_transition(void *pv)
 	                value = value | 0xf;
 	                writew( value, drvdata->base + DBG_POST_CSR);
 */
-//			drvdata->state = 1;
+			drvdata->state = 1;
+			gxp_pch_s0=0;
 			printk(KERN_INFO "postcode interrupt started\n");
 			}
 /*			if ( gxp_pch_s0 == 2 )
