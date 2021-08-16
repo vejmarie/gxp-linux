@@ -118,6 +118,7 @@ static int wait_power_transition(void *pv)
 	while(1)
 	{
 	        wait_event_interruptible(gxp_gpio, gxp_pch_s0 != 0 );
+		msleep(2000);
 		{
 			if ( drvdata->state == 0 ) 
 			{
