@@ -242,7 +242,7 @@ static int gxp_gpio_xreg_get(struct gpio_chip *chip, unsigned int offset)
 					printk(KERN_INFO "GXP_GPIO %x\n", gxp_gpio);
 				}
 			}
-			else
+/*			else
 			{
 				if ( gxp_pch_s0 == 1 ) 
 				{
@@ -252,6 +252,7 @@ static int gxp_gpio_xreg_get(struct gpio_chip *chip, unsigned int offset)
 				}
 				printk(KERN_INFO "Power down\n");
 			}
+*/
 		}
 		break;
 	case 62 ... 65:
