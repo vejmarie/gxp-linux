@@ -209,6 +209,7 @@ static irqreturn_t gxp_dbg_post_irq(int irq, void *_drvdata)
 		mutex_lock(&drvdata->mutex);
 		drvdata->previouspostcode = drvdata->postcode;
 		drvdata->postcode = value;
+		printk(KERN_INFO "New postcode: %x\n", value);
 		mutex_unlock(&drvdata->mutex);
 	}
 	// update CSR
