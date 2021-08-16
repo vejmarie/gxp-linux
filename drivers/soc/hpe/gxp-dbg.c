@@ -114,6 +114,7 @@ static const struct file_operations post_fops = {
 // This function is a kthread
 static int wait_power_transition(void *pv)
 {
+	unsigned short int value;
 	while(1)
 	{
 	        wait_event_interruptible(gxp_gpio, gxp_pch_s0 != 0);
