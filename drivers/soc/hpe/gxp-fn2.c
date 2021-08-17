@@ -59,6 +59,8 @@ static int gxp_fn2_gpio_get(struct gpio_chip *chip, unsigned int offset)
 		//offset 0x70 bit 24
 		regmap_read(drvdata->fn2_map, FN2_SEVSTAT, &val);
 		ret = (val&BIT(24))?1:0;
+		if ( ret )
+			printk(KERN_INFO "PGOOD detected\n");
 		break;
 	case PERST:
 		//offset 0x70 bit 25
