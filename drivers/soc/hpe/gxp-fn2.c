@@ -69,14 +69,14 @@ static int gxp_fn2_gpio_get(struct gpio_chip *chip, unsigned int offset)
 		if ( ret )
 		{
 			gxp_pgood_trigger = 1;
-	                wake_up_interruptible(&gxp_gpio);
-	                printk(KERN_INFO "GXP_GPIO %x\n", gxp_gpio);
+	                wake_up_interruptible(&gxp_fn2);
+	                printk(KERN_INFO "GXP_GPIO %x\n", gxp_fn2);
                 }
                 else
                 {
 	                // We signal the transition to power down
 	                gxp_pgood_trigger = 2;
-	                wake_up_interruptible(&gxp_gpio);
+	                wake_up_interruptible(&gxp_fn2);
 	                printk(KERN_INFO "Power down\n");
                 }
 		break;
