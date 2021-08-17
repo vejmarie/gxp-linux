@@ -21,6 +21,8 @@
 #include <linux/regmap.h>
 #include <linux/reset.h>
 #include <linux/sysfs.h>
+#include <linux/wait.h>
+#include <linux/sched.h>
 
 #include "gxp-soclib.h"
 
@@ -32,6 +34,11 @@
 #define PGOOD_MASK 0x01
 #define PERST_MASK 0x02
 #define FN2_SEVMASK	0x74
+
+DECLARE_WAIT_QUEUE_HEAD(gxp_fn2);
+unsigned int gxp_pgood_trigger;
+EXPORT_SYMBOL(gxp_fn2);
+EXPORT_SYMBOL(gxp_pgood_trigger);
 
 enum xreg_gpio_pn {
 	VPBTN = 0,			//out
@@ -60,7 +67,18 @@ static int gxp_fn2_gpio_get(struct gpio_chip *chip, unsigned int offset)
 		regmap_read(drvdata->fn2_map, FN2_SEVSTAT, &val);
 		ret = (val&BIT(24))?1:0;
 		if ( ret )
-			printk(KERN_INFO "PGOOD detected\n");
+		{
+			gxp_pgood_trigger = 1;
+	                wake_up_interruptible(&gxp_gpio);
+	                printk(KERN_INFO "GXP_GPIO %x\n", gxp_gpio);
+                }
+                else
+                {
+	                // We signal the transition to power down
+	                gxp_pgood_trigger = 2;
+	                wake_up_interruptible(&gxp_gpio);
+	                printk(KERN_INFO "Power down\n");
+                }
 		break;
 	case PERST:
 		//offset 0x70 bit 25
@@ -241,6 +259,8 @@ static int gxp_fn2_probe(struct platform_device *pdev)
 	int ret;
 	struct gxp_fn2_drvdata *drvdata;
 	struct resource *res;
+
+	gxp_pgood_trigger = 0;
 
 	drvdata = devm_kzalloc(&pdev->dev, sizeof(struct gxp_fn2_drvdata),
 				GFP_KERNEL);

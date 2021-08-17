@@ -62,7 +62,10 @@ struct gxp_dbg_drvdata *drvdata=NULL;
 
 static DECLARE_WAIT_QUEUE_HEAD(wq);
 extern wait_queue_head_t gxp_gpio;
+extern wait_queue_head_t gxp_fn2;
+
 extern unsigned int gxp_pch_s0;
+extern unsigned int gxp_pgood_trigger;
 
 static int post_open(struct inode *inode, struct file *file)
 {
@@ -117,26 +120,26 @@ static int wait_power_transition(void *pv)
 	unsigned short int value;
 	while(1)
 	{
-	        wait_event_interruptible(gxp_gpio, gxp_pch_s0 != 0 );
-		msleep(2000);
+	        wait_event_interruptible(gxp_fn2, gxp_pgood_trigger != 0 );
+		msleep(200);
 		{
-			if (( drvdata->state == 0 )  && ( gxp_pch_s0 == 1 ))
+			if (( drvdata->state == 0 )  && ( gxp_pgood_trigger == 1 ))
 			{
-			printk(KERN_INFO "Power on event received %d %x\n", gxp_pch_s0, gxp_gpio);
+			printk(KERN_INFO "Power on event received %d %x\n", gxp_pgood_trigger, gxp_fn2);
 			value = readw(drvdata->base + DBG_POST_CSR);
 	                value = value | 0xf;
 	                writew( value, drvdata->base + DBG_POST_CSR);
 
 			drvdata->state = 1;
-			gxp_pch_s0=0;
+			gxp_pgood_trigger=0;
 			printk(KERN_INFO "postcode interrupt started\n");
 			}
-			if ( gxp_pch_s0 == 2 )
+			if ( gxp_pgood_trigger == 2 )
 			{
 				// we reset the power state, as a transition to off happened
 				printk(KERN_INFO "Power off event received\n");
 				drvdata->state = 0;
-				gxp_pch_s0 = 0;
+				gxp_pgood_trigger = 0;
 			}
 
 		}
