@@ -35,6 +35,7 @@
 #include <linux/sched.h>
 #include <linux/kthread.h>       
 #include <linux/delay.h>
+#include <linux/poll.h>
 
 #include "gxp-soclib.h"
 
@@ -107,10 +108,20 @@ static int post_read(struct file *f, char __user *buf, size_t len, loff_t *off)
         return 1;
 }
 
+static __poll_t post_poll(struct file *file,
+				    struct poll_table_struct *pt)
+{
+	if ( drvdata->previouspostcode != drvdata->postcode ) 
+		return EPOLLIN;
+	else
+		return 0;
+}
+
 static const struct file_operations post_fops = {
         .owner          = THIS_MODULE,
         .open           = post_open,
 	.read		= post_read,
+	.poll		= post_poll,
 	.release	= post_release,
 };
 
