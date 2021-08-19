@@ -113,10 +113,11 @@ static int post_read(struct file *f, char __user *buf, size_t len, loff_t *off)
 static __poll_t post_poll(struct file *file,
 				    struct poll_table_struct *pt)
 {
-	if ( drvdata->previouspostcode != drvdata->postcode ) 
+	// if ( drvdata->previouspostcode != drvdata->postcode ) 
+	wait_event_interruptible(wq, drvdata->postcode != drvdata->previouspostcode);
 		return EPOLLIN;
-	else
-		return 0;
+//	else
+//		return 0;
 }
 
 static const struct file_operations post_fops = {
