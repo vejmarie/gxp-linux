@@ -100,7 +100,9 @@ static int post_read(struct file *f, char __user *buf, size_t len, loff_t *off)
 {
 	// whatever happens we need to return an initial value even if postcode == 0 and previouspostcode == 0
 	// this case is happening when the system is offline
+	printk(KERN_INFO "Waiting for data\n");
 	wait_event_interruptible(wq, drvdata->postcode != drvdata->previouspostcode);
+	printk(KERN_INFO "Data retrieved and read: %x\n", drvdata->postcode);
 	drvdata->previouspostcode = drvdata->postcode;
 	if (copy_to_user(buf, &drvdata->postcode, 2)) {
         	return -EFAULT;
