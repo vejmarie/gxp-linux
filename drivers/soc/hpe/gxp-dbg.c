@@ -114,7 +114,9 @@ static __poll_t post_poll(struct file *file,
 				    struct poll_table_struct *pt)
 {
 	// if ( drvdata->previouspostcode != drvdata->postcode ) 
+	printk(KERN_INFO "Waiting for polling data\n");
 	wait_event_interruptible(wq, drvdata->postcode != drvdata->previouspostcode);
+	printk(KERN_INFO "Data available\n");
 		return EPOLLIN;
 //	else
 //		return 0;
