@@ -166,6 +166,7 @@ static int gxp_csm_probe(struct platform_device *pdev)
 {
 	struct gxp_csm_drvdata *drvdata;
 	struct resource *res;
+	unsigned int i;
 
 	drvdata = devm_kzalloc(&pdev->dev,
 				sizeof(struct gxp_csm_drvdata), GFP_KERNEL);
