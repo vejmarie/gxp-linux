@@ -772,7 +772,6 @@ static void gxp_udc_out_0byte_status(struct gxp_udc_ep *ep)
 {
 	u32 evdepcc;
 
-	pr_debug("%s\n", __func__);
 	//out
 	evdepcc = readl(ep->base + EVDEPCC);
 	evdepcc &= ~EVDEPCC_CFGINOUT;
@@ -786,7 +785,6 @@ static void gxp_udc_in_0byte_status(struct gxp_udc_ep *ep)
 {
 	u32 evdepcc;
 
-	pr_debug("%s\n", __func__);
 	//in
 	evdepcc = readl(ep->base + EVDEPCC);
 	evdepcc |= EVDEPCC_CFGINOUT;
