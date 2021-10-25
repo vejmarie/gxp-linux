@@ -169,6 +169,8 @@ static int gxp_peci_probe(struct platform_device *pdev)
 	struct gxp_peci *priv;
 	int ret;
 
+	pr_devel("PROBING PECI\n") ;
+
 	adapter = peci_alloc_adapter(&pdev->dev, sizeof(*priv));
 	if (!adapter)
 		return -ENOMEM;
