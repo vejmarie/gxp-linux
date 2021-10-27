@@ -21,6 +21,8 @@
 #include <linux/regmap.h>
 #include <linux/reset.h>
 #include <linux/sysfs.h>
+#include <linux/wait.h>
+#include <linux/sched.h>
 
 #include "gxp-soclib.h"
 
@@ -32,6 +34,9 @@
 #define PGOOD_MASK 0x01
 #define PERST_MASK 0x02
 #define FN2_SEVMASK	0x74
+
+DECLARE_WAIT_QUEUE_HEAD(gxp_fn2);
+unsigned int gxp_pgood_trigger;
 
 enum xreg_gpio_pn {
 	VPBTN = 0,			//out
@@ -59,6 +64,15 @@ static int gxp_fn2_gpio_get(struct gpio_chip *chip, unsigned int offset)
 		//offset 0x70 bit 24
 		regmap_read(drvdata->fn2_map, FN2_SEVSTAT, &val);
 		ret = (val&BIT(24))?1:0;
+		if (ret) {
+			// We signal the transition to power good
+			gxp_pgood_trigger = 1;
+			wake_up_interruptible(&gxp_fn2);
+		} else {
+			// We signal the transition to power down
+			gxp_pgood_trigger = 2;
+			wake_up_interruptible(&gxp_fn2);
+		}
 		break;
 	case PERST:
 		//offset 0x70 bit 25
