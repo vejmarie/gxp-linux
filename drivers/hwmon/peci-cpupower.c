@@ -653,6 +653,7 @@ static int peci_cpupower_probe(struct platform_device *pdev)
 	u32 energy_cfg_idx = 0;
 	u32 cmd_mask;
 
+	printk("peci cpupower probe\n");
 	cmd_mask = BIT(PECI_CMD_RD_PKG_CFG) | BIT(PECI_CMD_WR_PKG_CFG);
 	if ((mgr->client->adapter->cmd_mask & cmd_mask) != cmd_mask)
 		return -ENODEV;
