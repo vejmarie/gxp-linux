@@ -1289,7 +1289,7 @@ static int gxp_udc_probe(struct platform_device *pdev)
 }
 
 static const struct of_device_id gxp_udc_of_match[] = {
-	{ .compatible = "hpe, gxp-udc" },
+	{ .compatible = "hpe,gxp-udc" },
 	{},
 };
 MODULE_DEVICE_TABLE(of, gxp_udc_of_match);

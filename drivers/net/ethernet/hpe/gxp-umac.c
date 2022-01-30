@@ -869,7 +869,7 @@ static int umac_remove(struct platform_device *pdev)
 }
 
 static const struct of_device_id umac_of_matches[] = {
-	{ .compatible = "hpe, gxp-umac", },
+	{ .compatible = "hpe,gxp-umac", },
 	{},
 };
 MODULE_DEVICE_TABLE(of, umac_of_matches);
