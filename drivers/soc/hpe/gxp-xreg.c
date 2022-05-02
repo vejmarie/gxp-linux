@@ -30,8 +30,8 @@
 #define XREG_SIDEBAND_SEL	0x40
 // vejmarie gen10
 // #define XREG_INT_GRP_STAT_MASK	0x88
-
 #define XREG_INT_GRP_STAT_MASK	0x94
+
 //vejmarie gen10
 //#define XREG_INT_HI_PRI_EN	0x8C
 #define XREG_INT_HI_PRI_EN	0xA0
@@ -210,28 +210,34 @@ static int gxp_gpio_xreg_get(struct gpio_chip *chip, unsigned int offset)
 		break;
 	case FAN1_INST ...FAN8_INST:
 		//0x26 fan[8:1]_inst
-		regmap_read(drvdata->xreg_map, 0x24, &val);
+		// regmap_read(drvdata->xreg_map, 0x24, &val);
+		regmap_read(drvdata->xreg_map, 0x7a, &val);
 		ret = (val&BIT((offset - FAN1_INST) + 24))?1:0;
 		break;
 	case FAN9_INST ... FAN16_INST:
 		//0x27 fan[16:9]_inst
-		regmap_read(drvdata->xreg_map, 0x28, &val);
+		// regmap_read(drvdata->xreg_map, 0x28, &val);
+		regmap_read(drvdata->xreg_map, 0x7b, &val);
 		ret = (val&BIT(offset - FAN9_INST))?1:0;
 		break;
 	case FAN1_FAIL ... FAN16_FAIL:
 		//0x29 fan[8:1]_fail
 		//0x2A fan[16:9]_fail
-		regmap_read(drvdata->xreg_map, 0x28, &val);
+		// regmap_read(drvdata->xreg_map, 0x28, &val);
+
+		regmap_read(drvdata->xreg_map, 0x7c, &val);
 		ret = (val&BIT((offset - FAN1_FAIL) + 8))?1:0;
 		break;
 	case FAN1_ID ... FAN8_ID:
 		//0x2B fan[8:1]_id
-		regmap_read(drvdata->xreg_map, 0x28, &val);
+		// regmap_read(drvdata->xreg_map, 0x28, &val);
+		regmap_read(drvdata->xreg_map, 0x7f, &val);
 		ret = (val&BIT((offset - FAN1_ID) + 24))?1:0;
 		break;
 	case FAN9_ID ... FAN16_ID:
 		//0x2C fan[16:9]_id
-		regmap_read(drvdata->xreg_map, 0x2c, &val);
+		// regmap_read(drvdata->xreg_map, 0x2c, &val);
+		regmap_read(drvdata->xreg_map, 0x80, &val);
 		ret = (val&BIT(offset - FAN9_ID))?1:0;
 		break;
 	case PWR_BTN_INT ... SLP_INT:
