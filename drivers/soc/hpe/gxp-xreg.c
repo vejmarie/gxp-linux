@@ -28,24 +28,27 @@
 #define GPIO_DIR_IN  1
 
 #define XREG_SIDEBAND_SEL	0x40
-
 // vejmarie gen10
 // #define XREG_INT_GRP_STAT_MASK	0x88
-#define XREG_INT_GRP_STAT_MASK	0x94
 
+#define XREG_INT_GRP_STAT_MASK	0x94
 //vejmarie gen10
 //#define XREG_INT_HI_PRI_EN	0x8C
 #define XREG_INT_HI_PRI_EN	0xA0
+
+//vejmarie gen10
+//#define XREG_INT_GRP5_BASE	0xB0
+#define XREG_INT_GRP5_BASE	0xC0
 
 // vejmarie gen10
 // #define XREG_INT_GRP5_FLAG	0xB0
 #define XREG_INT_GRP5_FLAG	0xC0
 
-//vejmarie gen10
+// vejmarie gen10
 // #define XREG_INT_GRP5_MASK	0xB1
 #define XREG_INT_GRP5_MASK	0xC1
 
-//vejmarie gen10
+// vejmarie gen10
 // #define XREG_INT_GRP5_STAT	0xB2
 #define XREG_INT_GRP5_STAT	0xC2
 
