@@ -32,9 +32,15 @@
 #define XREG_INT_GRP_STAT_MASK	0x88
 #define XREG_INT_HI_PRI_EN	0x8C
 #define XREG_INT_GRP5_BASE	0xB0
-#define XREG_INT_GRP5_FLAG	0xB0
-#define XREG_INT_GRP5_MASK	0xB1
-#define XREG_INT_GRP5_STAT	0xB2
+// vejmarie gen10
+// #define XREG_INT_GRP5_FLAG	0xB0
+#define XREG_INT_GRP5_FLAG	0xC0
+// #define XREG_INT_GRP5_MASK	0xB1
+#define XREG_INT_GRP5_MASK	0xC1
+
+// #define XREG_INT_GRP5_STAT	0xB2
+#define XREG_INT_GRP5_STAT	0xC2
+
 #define XREG_INT_GRP5_PIN_BASE	59
 
 enum xreg_gpio_pn {
