@@ -51,7 +51,9 @@ static ssize_t show_fault(struct device *dev, struct device_attribute *attr,
 	unsigned int mask = 0x1;
 
 	// Check Fan present.
-	regmap_read(drvdata->xreg_map, 0x28, &reg);
+	// vejmarie
+	// regmap_read(drvdata->xreg_map, 0x28, &reg);
+	regmap_read(drvdata->xreg_map, 0x7f, &reg);
 	reg = reg >> 8;
 	mask = mask << (nr * 2); // Shift 2 bits per Fan
 
@@ -72,7 +74,9 @@ static ssize_t show_in(struct device *dev, struct device_attribute *attr,
 	regmap_read(drvdata->fn2_map, 0x70, &reg);
 	if (reg & BIT(24)) {
 		// Check Fan present
-		regmap_read(drvdata->xreg_map, 0x24, &reg);
+		// vejmarie
+		// regmap_read(drvdata->xreg_map, 0x24, &reg);
+		regmap_read(drvdata->xreg_map, 0x7a, &reg);
 		reg = reg >> 24;
 
 		// If Fan presents, then read it.
