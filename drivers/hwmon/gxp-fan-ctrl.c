@@ -134,6 +134,7 @@ static ssize_t show_tach(struct device *dev, struct device_attribute *attr,
         unsigned long val;
 
         val = readl(drvdata->base + OFFSET_TACH0 + 4*nr);
+	pr_info("Tach value %ld\n", val);
 
         return sprintf(buf, "%d\n", val);
 }
