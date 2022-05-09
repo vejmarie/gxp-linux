@@ -120,7 +120,7 @@ static ssize_t store_pwm(struct device *dev, struct device_attribute *attr,
 
 	mutex_lock(&drvdata->update_lock);
 
-	writeb(val, drvdata->base + OFFSET_PWM0DUTY + nr);
+	writeb(val, drvdata->base + OFFSET_PWM0DUTY);
 
 	mutex_unlock(&drvdata->update_lock);
 	return count;
@@ -134,7 +134,7 @@ static ssize_t show_tach(struct device *dev, struct device_attribute *attr,
         unsigned long val;
 
         val = readl(drvdata->base + OFFSET_TACH0 + 4*nr, nr);
-	pr_info("Tach value %ld %d\n", val);
+	pr_info("Tach value %ld %d\n", val, nr);
 
         return sprintf(buf, "%d\n", val);
 }
