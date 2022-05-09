@@ -131,9 +131,9 @@ static ssize_t show_tach(struct device *dev, struct device_attribute *attr,
 {
         int nr = (to_sensor_dev_attr(attr))->index;
         struct gxp_fan_ctrl_drvdata *drvdata = dev_get_drvdata(dev);
-        unsigned char val;
+        unsigned long val;
 
-        val = readb(drvdata->base + OFFSET_TACH0 + 4*nr);
+        val = readl(drvdata->base + OFFSET_TACH0 + 4*nr);
 
         return sprintf(buf, "%d\n", val);
 }
