@@ -134,9 +134,9 @@ static ssize_t show_tach(struct device *dev, struct device_attribute *attr,
         unsigned long val;
 
 	// enable fan tach
-	writel(50, 0xc0000c18);
+	writel(200, drvdata->base + 0x18);
 	// enable fan reporting
-	writel(0x7f, 0xc0000c1c);
+	writel(0x7f, drvdata->base + 0x1c);
         val = readl(drvdata->base + OFFSET_TACH0 + 4*nr);
 	pr_info("Tach value %ld %d\n", val, nr);
 
