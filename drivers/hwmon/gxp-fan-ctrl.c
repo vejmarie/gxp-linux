@@ -31,6 +31,7 @@
 #define OFFSET_PWM6DUTY	0x16
 #define OFFSET_PWM7DUTY	0x17
 
+#define OFFSET_TACH0 0x80
 
 struct gxp_fan_ctrl_drvdata {
 	struct device	*dev;
@@ -125,6 +126,18 @@ static ssize_t store_pwm(struct device *dev, struct device_attribute *attr,
 	return count;
 }
 
+static ssize_t show_tach(struct device *dev, struct device_attribute *attr,
+                        char *buf)
+{
+        int nr = (to_sensor_dev_attr(attr))->index;
+        struct gxp_fan_ctrl_drvdata *drvdata = dev_get_drvdata(dev);
+        unsigned char val;
+
+        val = readb(drvdata->base + OFFSET_TACH0 + 4*nr);
+
+        return sprintf(buf, "%d\n", val);
+}
+
 static SENSOR_DEVICE_ATTR(pwm0, 0200 | 0444, show_pwm, store_pwm, 0);
 static SENSOR_DEVICE_ATTR(pwm1, 0200 | 0444, show_pwm, store_pwm, 1);
 static SENSOR_DEVICE_ATTR(pwm2, 0200 | 0444, show_pwm, store_pwm, 2);
@@ -133,6 +146,18 @@ static SENSOR_DEVICE_ATTR(pwm4, 0200 | 0444, show_pwm, store_pwm, 4);
 static SENSOR_DEVICE_ATTR(pwm5, 0200 | 0444, show_pwm, store_pwm, 5);
 static SENSOR_DEVICE_ATTR(pwm6, 0200 | 0444, show_pwm, store_pwm, 6);
 static SENSOR_DEVICE_ATTR(pwm7, 0200 | 0444, show_pwm, store_pwm, 7);
+
+// vejmarie add tach attribute
+//
+
+static SENSOR_DEVICE_ATTR(tach0, 0200 | 0444, show_tach, NULL, 0);
+static SENSOR_DEVICE_ATTR(tach1, 0200 | 0444, show_tach, NULL, 1);
+static SENSOR_DEVICE_ATTR(tach2, 0200 | 0444, show_tach, NULL, 2);
+static SENSOR_DEVICE_ATTR(tach3, 0200 | 0444, show_tach, NULL, 3);
+static SENSOR_DEVICE_ATTR(tach4, 0200 | 0444, show_tach, NULL, 4);
+static SENSOR_DEVICE_ATTR(tach5, 0200 | 0444, show_tach, NULL, 5);
+static SENSOR_DEVICE_ATTR(tach6, 0200 | 0444, show_tach, NULL, 6);
+static SENSOR_DEVICE_ATTR(tach7, 0200 | 0444, show_tach, NULL, 7);
 
 static struct sensor_device_attribute sda_in_input[] = {
 	SENSOR_ATTR(fan0_input, 0444, show_in, NULL, 0),
@@ -182,6 +207,14 @@ static struct attribute *gxp_fan_ctrl_attrs[] = {
 	&sensor_dev_attr_pwm5.dev_attr.attr,
 	&sensor_dev_attr_pwm6.dev_attr.attr,
 	&sensor_dev_attr_pwm7.dev_attr.attr,
+	&sensor_dev_attr_tach0.dev_attr.attr,
+        &sensor_dev_attr_tach1.dev_attr.attr,
+        &sensor_dev_attr_tach2.dev_attr.attr,
+        &sensor_dev_attr_tach3.dev_attr.attr,
+        &sensor_dev_attr_tach4.dev_attr.attr,
+        &sensor_dev_attr_tach5.dev_attr.attr,
+        &sensor_dev_attr_tach6.dev_attr.attr,
+        &sensor_dev_attr_tach7.dev_attr.attr,
 	NULL,
 };
 
